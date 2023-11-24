@@ -2,17 +2,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
+#include <dirent.h>
+#include <string.h>
 #include "constants.h"
 #include "operations.h"
 #include "parser.h"
 
 int main(int argc, char *argv[]) {
+  //neste momento leva um delay em ms mas agora leva o dirPath tbm
   unsigned int state_access_delay_ms = STATE_ACCESS_DELAY_MS;
 
-  if (argc > 1) {
+  DIR *dirp;
+  struct dirent *dp;
+  /*struct dirent {
+  ino_t d_ino;  File i-node number
+  char d_name[]; Null-terminated name of file 
+  };*/
+  dirp = opendir(argv[1]);
+  //SYSTEM CALL FAILED
+  if (!dirp){ 
+    fprintf(stderr,"opendir failed on %s",argv[1]);
+    return -1;
+  }
+  dp = readdir(dirp);
+  while (dp){
+    if (!strcmp(dp->d_name,".") || !strcmp(dp->d_name,".."));
+    else printf("%s\n",dp->d_name);
+    dp = readdir(dirp);
+  }
+  if (argc > 2){
     char *endptr;
-    unsigned long int delay = strtoul(argv[1], &endptr, 10);
+    unsigned long int delay = strtoul(argv[2], &endptr, 10);
 
     if (*endptr != '\0' || delay > UINT_MAX) {
       fprintf(stderr, "Invalid delay value or value too large\n");
@@ -32,8 +52,9 @@ int main(int argc, char *argv[]) {
     size_t num_rows, num_columns, num_coords;
     size_t xs[MAX_RESERVATION_SIZE], ys[MAX_RESERVATION_SIZE];
 
-    printf("> ");
-    fflush(stdout);
+    //no need for these operations
+    //printf("> ");
+    //fflush(stdout);
 
     switch (get_next(STDIN_FILENO)) {
       case CMD_CREATE:
