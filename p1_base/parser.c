@@ -1,3 +1,4 @@
+
 #include "parser.h"
 
 #include <limits.h>
@@ -9,7 +10,6 @@
 
 static int read_uint(int fd, unsigned int *value, char *next) {
   char buf[16];
-
   int i = 0;
   while (1) {
     if (read(fd, buf + i, 1) == 0) {
