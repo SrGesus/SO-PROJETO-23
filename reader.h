@@ -17,7 +17,7 @@ int write_fmt(int fd, const char *restrict fmt, ...) {
 
   va_start(args, fmt);
   vsnprintf(buffer, buffer_size, fmt, args);
-
+  va_end(args);
   size_t len = strlen(buffer);
   size_t done = 0;
 
