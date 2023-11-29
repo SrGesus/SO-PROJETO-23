@@ -1,18 +1,47 @@
 #ifndef JOBS_H
 #define JOBS_H
 
+#include <errno.h>
+#include <stdarg.h>
 #include "parser.h"
+
+int write_fmt(int fd, const char *restrict fmt, ...) {
+  const size_t buffer_size = 256;
+  char buffer[buffer_size];
+  va_list args;
+
+  va_start(args, fmt);
+  vsnprintf(buffer, buffer_size, fmt, args);
+
+  size_t len = strlen(buffer);
+  size_t done = 0;
+
+  while (len > 0) {
+    ssize_t bytes_written = write(fd, buffer + done, len);
+
+    if (bytes_written < 0){
+      fprintf(stderr, "write error: %s\n", strerror(errno));
+      return -1;
+    }
+
+    /* might not have managed to write all, len becomes what remains */
+    len -= (size_t)bytes_written;
+    done += (size_t)bytes_written;
+  }
+  return 0;
+}
 
 int read_batch(int fd_in, int fd_out) {
   unsigned int event_id, delay;
   size_t num_rows, num_columns, num_coords;
   size_t xs[MAX_RESERVATION_SIZE], ys[MAX_RESERVATION_SIZE];
+  printf("%d\n", fd_out);
 
   switch (get_next(fd_in)) {
     case CMD_CREATE:
       if (parse_create(fd_in, &event_id, &num_rows, &num_columns) != 0) {
         fprintf(stderr, "Invalid command. See HELP for usage\n");
-        continue;
+        return -1;
       }
 
       if (ems_create(event_id, num_rows, num_columns)) {
@@ -26,7 +55,7 @@ int read_batch(int fd_in, int fd_out) {
 
       if (num_coords == 0) {
         fprintf(stderr, "Invalid command. See HELP for usage\n");
-        continue;
+        return -1;
       }
 
       if (ems_reserve(event_id, num_coords, xs, ys)) {
@@ -38,7 +67,7 @@ int read_batch(int fd_in, int fd_out) {
     case CMD_SHOW:
       if (parse_show(fd_in, &event_id) != 0) {
         fprintf(stderr, "Invalid command. See HELP for usage\n");
-        continue;
+        return -1;
       }
 
       if (ems_show(event_id)) {
@@ -57,7 +86,7 @@ int read_batch(int fd_in, int fd_out) {
     case CMD_WAIT:
       if (parse_wait(fd_in, &delay, NULL) == -1) {  // thread_id is not implemented
         fprintf(stderr, "Invalid command. See HELP for usage\n");
-        continue;
+        return -1;
       }
 
       if (delay > 0) {
@@ -90,8 +119,9 @@ int read_batch(int fd_in, int fd_out) {
 
     case EOC:
       ems_terminate();
-      return 0;
+      return 1;
   }
+  return 0;
 }
 
 #endif // JOBS_H
