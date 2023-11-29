@@ -11,25 +11,33 @@
 int main(int argc, char *argv[]) {
   //neste momento leva um delay em ms mas agora leva o dirPath tbm
   unsigned int state_access_delay_ms = STATE_ACCESS_DELAY_MS;
-
+  char* total_path;
   DIR *dirp;
   struct dirent *dp;
   /*struct dirent {
   ino_t d_ino;  File i-node number
   char d_name[]; Null-terminated name of file 
   };*/
-  dirp = opendir(argv[1]);
+  if (argc > 1){
+    dirp = opendir(argv[1]);
   //SYSTEM CALL FAILED
-  if (!dirp){ 
-    fprintf(stderr,"opendir failed on %s",argv[1]);
-    return -1;
-  }
-  dp = readdir(dirp);
-  while (dp){
-    if (!strcmp(dp->d_name,".") || !strcmp(dp->d_name,".."));
-    else printf("%s\n",dp->d_name);
+    if (!dirp){ 
+      fprintf(stderr,"opendir failed on %s",argv[1]);
+      return -1;
+    }
     dp = readdir(dirp);
+    while (dp){
+      if (strcmp(dp->d_name,".") && strcmp(dp->d_name,"..")){
+        total_path = (char*)malloc((strlen(dp->d_name)+strlen(argv[1])+2)*sizeof(char));
+        strcpy(total_path,argv[1]);
+        strcat(total_path,"/");
+        strcat(total_path,dp->d_name);
+        printf("%s\n",total_path);
+      }
+      dp = readdir(dirp);
+    }
   }
+  
   if (argc > 2){
     char *endptr;
     unsigned long int delay = strtoul(argv[2], &endptr, 10);
