@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #include "constants.h"
 #include "operations.h"
@@ -13,6 +15,9 @@
 int main(int argc, char *argv[]) {
   //neste momento leva um delay em ms mas agora leva o dirPath tbm
   unsigned int state_access_delay_ms = STATE_ACCESS_DELAY_MS;
+  int openFlags = O_CREAT | O_WRONLY | O_TRUNC;
+  mode_t filePerms = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP |
+  S_IROTH | S_IWOTH;
   char* total_path;
   DIR *dirp;
   struct dirent *dp;
@@ -34,6 +39,10 @@ int main(int argc, char *argv[]) {
         strcpy(total_path,argv[1]);
         strcat(total_path,"/");
         strcat(total_path,dp->d_name);
+        printf("%s\n",total_path);
+        outputFile(total_path,".out");
+        int outputFile = open(total_path, openFlags, filePerms);
+        if (outputFile == -1) return -1;
         printf("%s\n",total_path);
       }
       dp = readdir(dirp);
@@ -57,7 +66,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   while(1) {
-    println("> ");
+    printf("> ");
     read_batch(STDIN_FILENO, 0);
   }
 }

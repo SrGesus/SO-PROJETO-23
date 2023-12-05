@@ -1,10 +1,15 @@
 #ifndef JOBS_H
 #define JOBS_H
-
+#include <string.h>
 #include <errno.h>
 #include <stdarg.h>
 #include "parser.h"
 
+void outputFile(char * path, const char *  newExtension){
+  char *extension =  strrchr(path,'.'); //find the last ocurrence of '.'
+  if (extension) strcpy(extension,newExtension);
+  else strcat(path,newExtension);
+}
 int write_fmt(int fd, const char *restrict fmt, ...) {
   const size_t buffer_size = 256;
   char buffer[buffer_size];
