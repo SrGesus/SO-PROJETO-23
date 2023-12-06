@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
           if (fdout < 0) {
             fprintf(stderr, "Could not open file: %s", total_path);
           } else {
-            while(!read_batch(fd_in,fdout)); // read_bach returns 1 when it reaches EOC
+            while(read_batch(fd_in,fdout) != 1); // read_bach returns 1 when it reaches EOC
             fsync(fdout);
             close(fd_in);
             close(fdout);
