@@ -3,6 +3,7 @@
 #include <time.h>
 
 #include "eventlist.h"
+#include "operations.h"
 
 static struct EventList* event_list = NULL;
 static unsigned int state_access_delay_ms = 0;
@@ -156,7 +157,9 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
   return 0;
 }
 
-int ems_show(unsigned int event_id) {
+int ems_show(int fd_out, unsigned int event_id) {
+  printf("BANANA\n");
+  write_fmt(fd_out, "STFU\n");
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
     return 1;
@@ -172,34 +175,34 @@ int ems_show(unsigned int event_id) {
   for (size_t i = 1; i <= event->rows; i++) {
     for (size_t j = 1; j <= event->cols; j++) {
       unsigned int* seat = get_seat_with_delay(event, seat_index(event, i, j));
-      printf("%u", *seat);
+      write_fmt(fd_out, "%u", *seat);
 
       if (j < event->cols) {
-        printf(" ");
+        write_fmt(fd_out, " ");
       }
     }
 
-    printf("\n");
+    write_fmt(fd_out, "\n");
   }
 
   return 0;
 }
 
-int ems_list_events() {
+int ems_list_events(int fd_out) {
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
     return 1;
   }
 
   if (event_list->head == NULL) {
-    printf("No events\n");
+    write_fmt(fd_out, "No events\n");
     return 0;
   }
 
   struct ListNode* current = event_list->head;
   while (current != NULL) {
-    printf("Event: ");
-    printf("%u\n", (current->event)->id);
+    write_fmt(fd_out, "Event: ");
+    write_fmt(fd_out, "%u\n", (current->event)->id);
     current = current->next;
   }
 
