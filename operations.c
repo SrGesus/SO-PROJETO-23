@@ -158,8 +158,6 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
 }
 
 int ems_show(int fd_out, unsigned int event_id) {
-  printf("BANANA\n");
-  write_fmt(fd_out, "STFU\n");
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
     return 1;

@@ -16,7 +16,7 @@ int read_batch(int fd_in, int fd_out) {
   unsigned int event_id, delay;
   size_t num_rows, num_columns, num_coords;
   size_t xs[MAX_RESERVATION_SIZE], ys[MAX_RESERVATION_SIZE];
-  printf("%d\n", fd_out);
+  //printf("%d\n", fd_out);
 
   switch (get_next(fd_in)) {
     case CMD_CREATE:
@@ -46,7 +46,7 @@ int read_batch(int fd_in, int fd_out) {
       break;
 
     case CMD_SHOW:
-      printf("BANANA\n");
+      //printf("BANANA\n");
       if (parse_show(fd_in, &event_id) != 0) {
         fprintf(stderr, "Invalid command. See HELP for usage\n");
         return -1;
@@ -96,14 +96,11 @@ int read_batch(int fd_in, int fd_out) {
       break;
 
     case CMD_BARRIER:  // Not implemented
-      printf("BANANA\n");
       break;
     case CMD_EMPTY:
-      printf("BANANA\n");
       break;
 
     case EOC:
-      printf("BANANA\n");
       return 1;
   }
   return 0;
