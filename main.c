@@ -17,8 +17,8 @@
 int main(int argc, char *argv[]) {
   //neste momento leva um delay em ms mas agora leva o dirPath tbm
   unsigned int state_access_delay_ms = STATE_ACCESS_DELAY_MS;
-  int max_proc, estado;
-  pid_t pid; //init_pid = getpid();
+  int max_proc, status;
+  pid_t pid;
   if (argc > 3){
     char *endptr;
     unsigned long int delay = strtoul(argv[3], &endptr, 10);
@@ -45,8 +45,8 @@ int main(int argc, char *argv[]) {
     DIR *dirp;
 
     /*struct dirent {
-    ino_t d_ino;  File i-node number
-    char d_name[]; Null-terminated name of file 
+      ino_t d_ino;  File i-node number
+      char d_name[]; Null-terminated name of file 
     };*/
     dirp = opendir(argv[1]);
     struct dirent *dp;
@@ -64,7 +64,6 @@ int main(int argc, char *argv[]) {
             strcpy(total_path,argv[1]);
             strcat(total_path,"/");
             strcat(total_path,dp->d_name);  // total_path = jobs/job.jobs
-            printf("Doing %s with %d\n",total_path,max_proc);
             int fd_in = open(total_path, O_RDONLY);
             if (fd_in < 0) {
               fprintf(stderr, "Could not open file: %s", total_path);
@@ -81,13 +80,12 @@ int main(int argc, char *argv[]) {
               }
             }
             free(total_path);
-            max_proc--;
-            if (max_proc == 0) exit(0);
+            if (--max_proc == 0) exit(status);
           }
           else{
-            pid = wait(&estado);
-            printf("Parent process %d was terminated with status %d\n",pid, estado);
-            exit(estado);
+            pid = wait(&status);
+            printf("Parent process %d was terminated with status %d\n",pid, status);
+            exit(status);
           }
     }
   }
