@@ -1,7 +1,7 @@
 
 #include "write.h"
 
-int write_fmt(int fd, const char * fmt, ...) {
+int write_fmt(int fd, const char *fmt, ...) {
   const size_t buffer_size = 256;
   char buffer[buffer_size];
   va_list args;
@@ -15,7 +15,7 @@ int write_fmt(int fd, const char * fmt, ...) {
   while (len > 0) {
     ssize_t bytes_written = write(fd, buffer + done, len);
 
-    if (bytes_written < 0){
+    if (bytes_written < 0) {
       fprintf(stderr, "Write error: %s\n", strerror(errno));
       return -1;
     }
