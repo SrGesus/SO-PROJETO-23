@@ -161,8 +161,7 @@ int parse_create(int fd, unsigned int *event_id, size_t *num_rows,
   return 0;
 }
 
-size_t parse_reserve(int fd, size_t max, unsigned int *event_id, size_t *xs,
-                     size_t *ys) {
+size_t parse_reserve(int fd, size_t max, unsigned int *event_id, seat_t *seats) {
   char ch;
 
   if (read_uint(fd, event_id, &ch) != 0 || ch != ' ') {
@@ -187,14 +186,14 @@ size_t parse_reserve(int fd, size_t max, unsigned int *event_id, size_t *xs,
       cleanup(fd);
       return 0;
     }
-    xs[num_coords] = (size_t)x;
+    seats[num_coords].x = (size_t)x;
 
     unsigned int y;
     if (read_uint(fd, &y, &ch) != 0 || ch != ')') {
       cleanup(fd);
       return 0;
     }
-    ys[num_coords] = (size_t)y;
+    seats[num_coords].y = (size_t)y;
 
     num_coords++;
 

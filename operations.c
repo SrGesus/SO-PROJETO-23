@@ -116,12 +116,13 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
   return 0;
 }
 
-int ems_reserve(unsigned int event_id, size_t num_seats, size_t *xs,
-                size_t *ys) {
+int ems_reserve(unsigned int event_id, size_t num_seats, seat_t *seats) {
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
     return 1;
   }
+
+
 
   struct Event *event = get_event_with_delay(event_id);
 
@@ -134,8 +135,8 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t *xs,
 
   size_t i = 0;
   for (; i < num_seats; i++) {
-    size_t row = xs[i];
-    size_t col = ys[i];
+    size_t row = seats[i].x;
+    size_t col = seats[i].y;
 
     if (row <= 0 || row > event->rows || col <= 0 || col > event->cols) {
       fprintf(stderr, "Invalid seat\n");
@@ -154,7 +155,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t *xs,
   if (i < num_seats) {
     event->reservations--;
     for (size_t j = 0; j < i; j++) {
-      *get_seat_with_delay(event, seat_index(event, xs[j], ys[j])) = 0;
+      *get_seat_with_delay(event, seat_index(event, seats[j].x, seats[j].y)) = 0;
     }
     return 1;
   }

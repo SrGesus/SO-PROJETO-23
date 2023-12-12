@@ -16,8 +16,7 @@ void outputFile(char *path, const char *newExtension) {
 int read_batch(int fd_in, int fd_out) {
   unsigned int event_id, delay;
   size_t num_rows, num_columns, num_coords;
-  size_t xs[MAX_RESERVATION_SIZE], ys[MAX_RESERVATION_SIZE];
-  // printf("%d\n", fd_out);
+  seat_t seats[MAX_RESERVATION_SIZE];
 
   switch (get_next(fd_in)) {
   case CMD_CREATE:
@@ -33,21 +32,20 @@ int read_batch(int fd_in, int fd_out) {
     break;
 
   case CMD_RESERVE:
-    num_coords = parse_reserve(fd_in, MAX_RESERVATION_SIZE, &event_id, xs, ys);
+    num_coords = parse_reserve(fd_in, MAX_RESERVATION_SIZE, &event_id, seats);
 
     if (num_coords == 0) {
       fprintf(stderr, "Invalid command. See HELP for usage\n");
       return -1;
     }
 
-    if (ems_reserve(event_id, num_coords, xs, ys)) {
+    if (ems_reserve(event_id, num_coords, seats)) {
       fprintf(stderr, "Failed to reserve seats\n");
     }
 
     break;
 
   case CMD_SHOW:
-    // printf("BANANA\n");
     if (parse_show(fd_in, &event_id) != 0) {
       fprintf(stderr, "Invalid command. See HELP for usage\n");
       return -1;
@@ -84,7 +82,8 @@ int read_batch(int fd_in, int fd_out) {
     break;
 
   case CMD_HELP:
-    printf("Available commands:\n"
+    write_fmt(fd_out, 
+          "Available commands:\n"
            "  CREATE <event_id> <num_rows> <num_columns>\n"
            "  RESERVE <event_id> [(<x1>,<y1>) (<x2>,<y2>) ...]\n"
            "  SHOW <event_id>\n"

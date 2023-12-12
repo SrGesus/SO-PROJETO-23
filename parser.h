@@ -2,6 +2,7 @@
 #define EMS_PARSER_H
 
 #include <stddef.h>
+#include "seat.h"
 
 enum Command {
   CMD_CREATE,
@@ -34,11 +35,9 @@ int parse_create(int fd, unsigned int *event_id, size_t *num_rows,
 /// @param fd File descriptor to read from.
 /// @param max Maximum number of coordinates to read.
 /// @param event_id Pointer to the variable to store the event ID in.
-/// @param xs Pointer to the array to store the X coordinates in.
-/// @param ys Pointer to the array to store the Y coordinates in.
+/// @param seats Pointer to the array to store the X,Y coordinates in.
 /// @return Number of coordinates read. 0 on failure.
-size_t parse_reserve(int fd, size_t max, unsigned int *event_id, size_t *xs,
-                     size_t *ys);
+size_t parse_reserve(int fd, size_t max, unsigned int *event_id, seat_t *seats);
 
 /// Parses a SHOW command.
 /// @param fd File descriptor to read from.

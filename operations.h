@@ -1,8 +1,9 @@
 #ifndef EMS_OPERATIONS_H
 #define EMS_OPERATIONS_H
 
-#include "write.h"
 #include <stddef.h>
+#include "write.h"
+#include "seat.h"
 
 /// Initializes the EMS state.
 /// @param delay_ms State access delay in milliseconds.
@@ -25,8 +26,7 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols);
 /// @param xs Array of rows of the seats to reserve.
 /// @param ys Array of columns of the seats to reserve.
 /// @return 0 if the reservation was created successfully, 1 otherwise.
-int ems_reserve(unsigned int event_id, size_t num_seats, size_t *xs,
-                size_t *ys);
+int ems_reserve(unsigned int event_id, size_t num_seats, seat_t * seats);
 
 /// Prints the given event.
 /// @param event_id Id of the event to print.
