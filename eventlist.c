@@ -49,7 +49,7 @@ void free_list(struct EventList *list) {
 
   if (!list)
     return;
-    
+
   pthread_mutex_destroy(&list->append_mutex);
 
   struct ListNode *current = list->head;

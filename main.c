@@ -4,16 +4,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include "constants.h"
 #include "operations.h"
 #include "parser.h"
 #include "reader.h"
-#include "write.h"
 #include "thread_manager.h"
+#include "write.h"
 
 int is_jobs_file(const char *filename) {
   if ((filename = strrchr(filename, '.')))
@@ -22,7 +22,7 @@ int is_jobs_file(const char *filename) {
     return 0;
 }
 
-int process(const char *folder, const char *file) {
+int process(int max_thread, const char *folder, const char *file) {
   int openFlags = O_CREAT | O_WRONLY | O_TRUNC;
   mode_t filePerms = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
   char total_path[BUFSIZ];
@@ -43,8 +43,12 @@ int process(const char *folder, const char *file) {
     fprintf(stderr, "Failed to open file: %s", total_path);
     return -1;
   }
-  while (read_batch(fd_in, fdout) != 1)
+  manager_init(max_thread, fd_in, fdout);
+  // while (read_line(fd_in, fdout) != 1)
+  //   ; // read_bach returns 1 when it reaches EOC
+  while (manager_run(thread_routine))
     ; // read_bach returns 1 when it reaches EOC
+  manager_destroy();
   close(fd_in);
   fsync(fdout);
   close(fdout);
@@ -55,14 +59,15 @@ int process(const char *folder, const char *file) {
 int main(int argc, char *argv[]) {
   // neste momento leva um delay em ms mas agora leva o dirPath tbm
   unsigned int state_access_delay_ms = STATE_ACCESS_DELAY_MS;
-  int max_proc, status;
+  int max_proc, max_thread, status;
   pid_t pid; // init_pid = getpid();
 
   // If no max_proc
   max_proc = argc > 2 ? atoi(argv[2]) : 1;
+  max_thread = argc > 3 ? atoi(argv[3]) : 1;
 
   // state access delay is argument 3
-  if (argc > 3) {
+  if (argc > 4) {
     char *endptr;
     unsigned long int delay = strtoul(argv[3], &endptr, 10);
 
@@ -106,7 +111,7 @@ int main(int argc, char *argv[]) {
         if (pid < 0)
           fprintf(stderr, "Failed to create a new process\n");
         if (pid == 0) { // processo filho
-          exit(process(argv[1], dp->d_name));
+          exit(process(max_thread, argv[1], dp->d_name));
         }
       }
     }

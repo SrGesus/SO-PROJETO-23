@@ -3,10 +3,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "reader.h"
 #include "constants.h"
 #include "operations.h"
 #include "parser.h"
+#include "reader.h"
+#include "write.h"
 #include "thread_manager.h"
 
 void outputFile(char *path, const char *newExtension) {
@@ -17,10 +18,17 @@ void outputFile(char *path, const char *newExtension) {
     strcat(path, newExtension);
 }
 
-int read_batch(int fd_in, int fd_out) {
+void *thread_routine(void *arg) {
+  intptr_t thread_id = (intptr_t)arg;
+  // printf("%p\n", thread_manager);
+  return (void *)read_line(thread_id, thread_manager->fd_in, thread_manager->fd_out);
+}
+
+intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out) {
   unsigned int event_id, delay;
   size_t num_rows, num_columns, num_coords;
   seat_t seats[MAX_RESERVATION_SIZE];
+  printf("%lu\n", thread_id);
 
   switch (get_next(fd_in)) {
   case CMD_CREATE:
