@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-// #include <sys/stat.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 
 #include "constants.h"
@@ -13,6 +13,7 @@
 #include "parser.h"
 #include "reader.h"
 #include "write.h"
+#include "thread_manager.h"
 
 int is_jobs_file(const char *filename) {
   if ((filename = strrchr(filename, '.')))

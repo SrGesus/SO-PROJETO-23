@@ -5,6 +5,7 @@
 #include "eventlist.h"
 #include "operations.h"
 
+// meter lock antes de write_fmt
 static struct EventList *event_list = NULL;
 static unsigned int state_access_delay_ms = 0;
 
@@ -162,23 +163,30 @@ int ems_reserve(unsigned int event_id, size_t num_seats, seat_t *seats) {
   return 0;
 }
 
-int ems_show(int fd_out, unsigned int event_id) {
+int ems_show(int fd_out, unsigned int event_id){
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
     return 1;
   }
 
   struct Event *event = get_event_with_delay(event_id);
+  unsigned int * buf_seat = malloc(sizeof(unsigned int) * (event->cols * event->rows));
 
   if (event == NULL) {
     fprintf(stderr, "Event not found\n");
     return 1;
   }
-
+  pthread_rwlock_wrlock(&event->show_lock);
   for (size_t i = 1; i <= event->rows; i++) {
     for (size_t j = 1; j <= event->cols; j++) {
       unsigned int *seat = get_seat_with_delay(event, seat_index(event, i, j));
-      write_fmt(fd_out, "%u", *seat);
+    }
+  }
+  pthread_rwlock_unlock(&event->show_lock);
+  pthread_mutex_lock(&thread_manager->print_lock);
+  for (size_t i = 1; i <= event->rows; i++) {
+    for (size_t j = 1; j <= event->cols; j++) {
+      write_fmt(fd_out, "%u", buf_seat[j + i * event->cols]);
 
       if (j < event->cols) {
         write_fmt(fd_out, " ");
@@ -187,7 +195,7 @@ int ems_show(int fd_out, unsigned int event_id) {
 
     write_fmt(fd_out, "\n");
   }
-
+  pthread_mutex_unlock(&thread_manager->print_lock);
   return 0;
 }
 
