@@ -5,7 +5,7 @@
 #include <pthread.h>
 
 struct Event {
-  pthread_rwlock_t rwlock;
+  pthread_rwlock_t print_lock;
   unsigned int id;           /// Event id
   unsigned int reservations; /// Number of reservations for the event.
 

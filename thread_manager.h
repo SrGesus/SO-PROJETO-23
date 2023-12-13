@@ -9,7 +9,7 @@ typedef struct thread_data {
     size_t thread_id;
     pthread_t thread;
     unsigned int wait;
-    int status;
+    // int status;
 } thread_data_t;
 
 typedef struct manager {
@@ -102,6 +102,9 @@ void wait_time(size_t thread_id) {
     delay_ms = thread_manager->threads[thread_id-1].wait;
     thread_manager->threads[thread_id-1].wait = 0;
     pthread_mutex_unlock(&thread_manager->time_mutex);
+
+    if (delay_ms == 0)
+        return;
 
     delay = (struct timespec){delay_ms / 1000, (delay_ms % 1000) * 1000000};
     nanosleep(&delay, NULL);

@@ -21,19 +21,15 @@ int is_jobs_file(const char *filename) {
     return 0;
 }
 
-inline void join_paths(char *buf, const char *first, const char *second) {
-  strcpy(buf, first);
-  strcat(buf, "/");
-  strcat(buf, second);
-}
-
 int process(const char *folder, const char *file) {
   int openFlags = O_CREAT | O_WRONLY | O_TRUNC;
   mode_t filePerms = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
   char total_path[BUFSIZ];
 
   // total_path = jobs/job.jobs
-  join_paths(total_path, folder, file);
+  strcpy(total_path, folder);
+  strcat(total_path, "/");
+  strcat(total_path, file);
   printf("Initiating job: %s\n", total_path);
   int fd_in = open(total_path, O_RDONLY);
   if (fd_in < 0) {
@@ -113,7 +109,7 @@ int main(int argc, char *argv[]) {
         }
       }
     }
-    while (active_proc) {
+    while (active_proc > 0) {
       pid = wait(&status);
       printf("Child process %d was terminated with status %d\n", pid, status);
       active_proc--;
