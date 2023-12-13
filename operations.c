@@ -173,14 +173,19 @@ int ems_show(int fd_out, unsigned int event_id) {
   }
 
   struct Event *event = get_event_with_delay(event_id);
-  unsigned int *buf_seat =
-      malloc(sizeof(unsigned int) * (event->cols * event->rows));
 
   if (event == NULL) {
     fprintf(stderr, "Event not found\n");
     return 1;
   }
 
+  unsigned int *buf_seat =
+      malloc(sizeof(unsigned int) * (event->cols * event->rows));
+
+  if (buf_seat == NULL) {
+    fprintf(stderr, "Out of Memory\n");
+    return 1;
+  }
   // Write to buffer
   pthread_rwlock_wrlock(&event->show_lock);
   for (size_t i = 1; i <= event->rows; i++) {
@@ -203,6 +208,8 @@ int ems_show(int fd_out, unsigned int event_id) {
     write_fmt(fd_out, "\n\n");
   }
   pthread_mutex_unlock(&thread_manager->print_mutex);
+
+  free(buf_seat);
   return 0;
 }
 

@@ -3,10 +3,11 @@
 
 #include <pthread.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 typedef struct thread_data {
   // 1-indexed thread id
-  int thread_id;
+  intptr_t thread_id;
   pthread_t thread;
   unsigned int wait;
   // int status;
@@ -40,13 +41,13 @@ int manager_run(void *(*start_routine)(void *));
 /// Attempts to get lock to read from file.
 /// Exits thread if there is a barrier.
 /// @param thread_id from 1 to max_thread
-void manager_parse_lock(size_t thread_id);
+void manager_parse_lock(intptr_t thread_id);
 
 int manager_parse_unlock();
 
-void wait_time(size_t thread_id);
+void wait_time(intptr_t thread_id);
 
-void set_wait(unsigned int delay_ms, size_t thread_id);
+void set_wait(unsigned int delay_ms, int thread_id);
 
 void manager_destroy();
 

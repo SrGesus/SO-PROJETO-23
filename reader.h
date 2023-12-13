@@ -7,6 +7,11 @@ void outputFile(char *path, const char *newExtension);
 
 void *thread_routine(void *);
 
+/// @brief 
+/// @param thread_id 
+/// @param fd_in 
+/// @param fd_out 
+/// @return Returns -1 if there's an error parsing, 0 if success, 1 there's no more to read.
 intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out);
 
 #endif // JOBS_H

@@ -120,6 +120,7 @@ int main(int argc, char *argv[]) {
       printf("Child process %d was terminated with status %d\n", pid, status);
       active_proc--;
     }
+    closedir(dirp);
   }
 
   ems_terminate();

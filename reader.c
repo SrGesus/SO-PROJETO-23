@@ -20,22 +20,32 @@ void outputFile(char *path, const char *newExtension) {
 
 void *thread_routine(void *arg) {
   intptr_t thread_id = (intptr_t)arg;
-  // printf("%p\n", thread_manager);
-  return (void *)read_line(thread_id, thread_manager->fd_in, thread_manager->fd_out);
+  intptr_t result = 1;
+  while (result) {
+    result = read_line(thread_id, thread_manager->fd_in, thread_manager->fd_out);
+    if (result == -1) {
+      manager_parse_unlock();
+      fprintf(stderr, "Invalid command. See HELP for usage\n");
+    }
+  }
+  
+  return (void *)result;
 }
 
 intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out) {
   unsigned int event_id, delay;
-  size_t num_rows, num_columns, num_coords;
+  size_t num_rows, num_columns, num_seats;
   seat_t seats[MAX_RESERVATION_SIZE];
   printf("%lu\n", thread_id);
 
+  manager_parse_lock(thread_id);
+  
   switch (get_next(fd_in)) {
   case CMD_CREATE:
-    if (parse_create(fd_in, &event_id, &num_rows, &num_columns) != 0) {
-      fprintf(stderr, "Invalid command. See HELP for usage\n");
+    if (parse_create(fd_in, &event_id, &num_rows, &num_columns) != 0)
       return -1;
-    }
+
+    manager_parse_unlock();
 
     if (ems_create(event_id, num_rows, num_columns)) {
       fprintf(stderr, "Failed to create event\n");
@@ -44,14 +54,15 @@ intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out) {
     break;
 
   case CMD_RESERVE:
-    num_coords = parse_reserve(fd_in, MAX_RESERVATION_SIZE, &event_id, seats);
+    num_seats = parse_reserve(fd_in, MAX_RESERVATION_SIZE, &event_id, seats);
 
-    if (num_coords == 0) {
-      fprintf(stderr, "Invalid command. See HELP for usage\n");
+    if (num_seats == 0)
       return -1;
-    }
 
-    if (ems_reserve(event_id, num_coords, seats)) {
+    manager_parse_unlock();
+
+    seat_sort(seats, num_seats);
+    if (ems_reserve(event_id, num_seats, seats)) {
       fprintf(stderr, "Failed to reserve seats\n");
     }
 
@@ -63,6 +74,8 @@ intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out) {
       return -1;
     }
 
+    manager_parse_unlock();
+
     if (ems_show(fd_out, event_id)) {
       fprintf(stderr, "Failed to show event\n");
     }
@@ -70,6 +83,9 @@ intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out) {
     break;
 
   case CMD_LIST_EVENTS:
+
+    manager_parse_unlock();
+    
     if (ems_list_events(fd_out)) {
       fprintf(stderr, "Failed to list events\n");
     }
@@ -87,14 +103,18 @@ intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out) {
       ems_wait(delay);
     }
 
+    // Stop other threads from reading 
+    // until their wait time is written
+    manager_parse_unlock();
+
     break;
 
   case CMD_INVALID:
-    fprintf(stderr, "Invalid command. See HELP for usage\n");
-    break;
+    return -1;
 
   case CMD_HELP:
-    write_fmt(fd_out,
+    manager_parse_unlock();
+    printf(
               "Available commands:\n"
               "  CREATE <event_id> <num_rows> <num_columns>\n"
               "  RESERVE <event_id> [(<x1>,<y1>) (<x2>,<y2>) ...]\n"
@@ -107,11 +127,18 @@ intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out) {
     break;
 
   case CMD_BARRIER: // Not implemented
+    thread_manager->barred = 1;
+    // Stop other threads from reading 
+    // and bar them.
+    manager_parse_unlock();
     break;
+
   case CMD_EMPTY:
+    manager_parse_unlock();
     break;
 
   case EOC:
+    manager_parse_unlock();
     return 1;
   }
   return 0;
