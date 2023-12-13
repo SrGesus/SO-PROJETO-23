@@ -6,6 +6,7 @@ struct EventList *create_list() {
   struct EventList *list = (struct EventList *)malloc(sizeof(struct EventList));
   if (!list)
     return NULL;
+  pthread_mutex_init(&list->append_mutex, NULL);
   list->head = NULL;
   list->tail = NULL;
   return list;
@@ -23,6 +24,7 @@ int append_to_list(struct EventList *list, struct Event *event) {
   new_node->event = event;
   new_node->next = NULL;
 
+  pthread_mutex_lock(&list->append_mutex);
   if (list->head == NULL) {
     list->head = new_node;
     list->tail = new_node;
@@ -30,6 +32,7 @@ int append_to_list(struct EventList *list, struct Event *event) {
     list->tail->next = new_node;
     list->tail = new_node;
   }
+  pthread_mutex_unlock(&list->append_mutex);
 
   return 0;
 }
@@ -43,8 +46,11 @@ static void free_event(struct Event *event) {
 }
 
 void free_list(struct EventList *list) {
+
   if (!list)
     return;
+    
+  pthread_mutex_destroy(&list->append_mutex);
 
   struct ListNode *current = list->head;
   while (current) {

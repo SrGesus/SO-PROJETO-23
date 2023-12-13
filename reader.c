@@ -4,6 +4,10 @@
 #include <unistd.h>
 
 #include "reader.h"
+#include "constants.h"
+#include "operations.h"
+#include "parser.h"
+#include "thread_manager.h"
 
 void outputFile(char *path, const char *newExtension) {
   char *extension = strrchr(path, '.'); // find the last ocurrence of '.'

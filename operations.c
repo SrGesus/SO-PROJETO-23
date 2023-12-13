@@ -96,6 +96,7 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
   event->cols = num_cols;
   event->reservations = 0;
   event->data = malloc(num_rows * num_cols * sizeof(unsigned int));
+  pthread_rwlock_init(&event->show_lock, NULL);
 
   if (event->data == NULL) {
     fprintf(stderr, "Error allocating memory for event data\n");

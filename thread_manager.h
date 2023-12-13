@@ -15,6 +15,7 @@ typedef struct thread_data {
 typedef struct manager {
   pthread_mutex_t time_mutex;
   pthread_mutex_t parse_mutex;
+  pthread_mutex_t print_mutex;
   // If true exits all threads
   int barred;
   // Array for threads

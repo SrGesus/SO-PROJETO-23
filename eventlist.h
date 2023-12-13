@@ -1,11 +1,11 @@
 #ifndef EVENT_LIST_H
 #define EVENT_LIST_H
 
-#include <pthread.h>
 #include <stddef.h>
+#include <pthread.h>
 
 struct Event {
-  pthread_rwlock_t print_lock;
+  pthread_rwlock_t show_lock;
   unsigned int id;           /// Event id
   unsigned int reservations; /// Number of reservations for the event.
 
@@ -23,6 +23,7 @@ struct ListNode {
 
 // Linked list structure
 struct EventList {
+  pthread_mutex_t append_mutex;
   struct ListNode *head; // Head of the list
   struct ListNode *tail; // Tail of the list
 };
