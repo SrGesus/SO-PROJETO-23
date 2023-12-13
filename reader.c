@@ -82,15 +82,15 @@ int read_batch(int fd_in, int fd_out) {
     break;
 
   case CMD_HELP:
-    write_fmt(fd_out, 
-          "Available commands:\n"
-           "  CREATE <event_id> <num_rows> <num_columns>\n"
-           "  RESERVE <event_id> [(<x1>,<y1>) (<x2>,<y2>) ...]\n"
-           "  SHOW <event_id>\n"
-           "  LIST\n"
-           "  WAIT <delay_ms> [thread_id]\n" // thread_id is not implemented
-           "  BARRIER\n"                     // Not implemented
-           "  HELP\n");
+    write_fmt(fd_out,
+              "Available commands:\n"
+              "  CREATE <event_id> <num_rows> <num_columns>\n"
+              "  RESERVE <event_id> [(<x1>,<y1>) (<x2>,<y2>) ...]\n"
+              "  SHOW <event_id>\n"
+              "  LIST\n"
+              "  WAIT <delay_ms> [thread_id]\n" // thread_id is not implemented
+              "  BARRIER\n"                     // Not implemented
+              "  HELP\n");
 
     break;
 

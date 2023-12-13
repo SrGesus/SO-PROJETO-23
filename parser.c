@@ -161,7 +161,8 @@ int parse_create(int fd, unsigned int *event_id, size_t *num_rows,
   return 0;
 }
 
-size_t parse_reserve(int fd, size_t max, unsigned int *event_id, seat_t *seats) {
+size_t parse_reserve(int fd, size_t max, unsigned int *event_id,
+                     seat_t *seats) {
   char ch;
 
   if (read_uint(fd, event_id, &ch) != 0 || ch != ' ') {

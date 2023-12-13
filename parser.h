@@ -1,8 +1,8 @@
 #ifndef EMS_PARSER_H
 #define EMS_PARSER_H
 
-#include <stddef.h>
 #include "seat.h"
+#include <stddef.h>
 
 enum Command {
   CMD_CREATE,

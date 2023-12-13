@@ -122,8 +122,6 @@ int ems_reserve(unsigned int event_id, size_t num_seats, seat_t *seats) {
     return 1;
   }
 
-
-
   struct Event *event = get_event_with_delay(event_id);
 
   if (event == NULL) {
@@ -155,7 +153,8 @@ int ems_reserve(unsigned int event_id, size_t num_seats, seat_t *seats) {
   if (i < num_seats) {
     event->reservations--;
     for (size_t j = 0; j < i; j++) {
-      *get_seat_with_delay(event, seat_index(event, seats[j].x, seats[j].y)) = 0;
+      *get_seat_with_delay(event, seat_index(event, seats[j].x, seats[j].y)) =
+          0;
     }
     return 1;
   }

@@ -6,5 +6,12 @@ pkgs.mkShell {
   buildInputs = [
     pkgs.gnumake
     pkgs.clang
+    pkgs.zsh
   ];
+
+  shellHook =
+  ''
+    zsh
+  '';
+
 }
