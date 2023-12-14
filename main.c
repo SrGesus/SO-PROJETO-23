@@ -31,7 +31,7 @@ int process(int max_thread, const char *folder, const char *file) {
   strcpy(total_path, folder);
   strcat(total_path, "/");
   strcat(total_path, file);
-  printf("Initiating job: %s\n", total_path);
+  //printf("Initiating job: %s\n", total_path);
   int fd_in = open(total_path, O_RDONLY);
   if (fd_in < 0) {
     fprintf(stderr, "Failed to open file: %s", total_path);
@@ -52,7 +52,7 @@ int process(int max_thread, const char *folder, const char *file) {
   close(fd_in);
   fsync(fdout);
   close(fdout);
-  printf("Finished job: %s\n", total_path);
+  //printf("Finished job: %s\n", total_path);
   return 0;
 }
 
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
     while ((dp = readdir(dirp))) {
       if (active_proc >= max_proc) {
         pid = wait(&status);
-        printf("Child process %d was terminated with status %d\n", pid, status);
+        //printf("Child process %d was terminated with status %d\n", pid, status);
         active_proc--;
       }
       if (is_jobs_file(dp->d_name)) {
@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
     }
     while (active_proc > 0) {
       pid = wait(&status);
-      printf("Child process %d was terminated with status %d\n", pid, status);
+      //printf("Child process %d was terminated with status %d\n", pid, status);
       active_proc--;
     }
     closedir(dirp);

@@ -20,8 +20,8 @@ void outputFile(char *path, const char *newExtension) {
 
 void *thread_routine(void *arg) {
   intptr_t thread_id = (intptr_t)arg;
-  intptr_t result = 1;
-  while (result) {
+  intptr_t result = 0;
+  while (result != 1){
     result = read_line(thread_id, thread_manager->fd_in, thread_manager->fd_out);
     if (result == -1) {
       manager_parse_unlock();
@@ -36,7 +36,7 @@ intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out) {
   unsigned int event_id, delay;
   size_t num_rows, num_columns, num_seats;
   seat_t seats[MAX_RESERVATION_SIZE];
-  printf("%lu\n", thread_id);
+  //printf("%lu\n", thread_id);
 
   manager_parse_lock(thread_id);
   
@@ -126,7 +126,7 @@ intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out) {
 
     break;
 
-  case CMD_BARRIER: // Not implemented
+  case CMD_BARRIER:
     thread_manager->barred = 1;
     // Stop other threads from reading 
     // and bar them.

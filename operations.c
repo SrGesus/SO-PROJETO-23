@@ -205,7 +205,7 @@ int ems_show(int fd_out, unsigned int event_id) {
         write_fmt(fd_out, " ");
       }
     }
-    write_fmt(fd_out, "\n\n");
+    write_fmt(fd_out, "\n");
   }
   pthread_mutex_unlock(&thread_manager->print_mutex);
 
