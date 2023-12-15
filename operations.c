@@ -167,7 +167,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, seat_t *seats) {
 
     if (*get_seat_with_delay(event, seat_index(event, row, col)) != 0) {
       fprintf(stderr, "Seat already reserved\n");
-      num_seats++;
+      i++;
       break;
     }
   }

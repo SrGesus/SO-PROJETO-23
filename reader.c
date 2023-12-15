@@ -96,9 +96,7 @@ intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out) {
       return -1;
     }
 
-    if (delay > 0) {
-      printf("Waiting...\n");
-      
+    if (delay > 0) {      
       set_wait(delay, event_id);
     }
 

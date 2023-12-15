@@ -87,6 +87,8 @@ void thread_wait(intptr_t thread_id) {
   if (delay_ms == 0)
     return;
 
+  printf("Waiting...\n");
+
   delay = (struct timespec){delay_ms / 1000, (delay_ms % 1000) * 1000000};
   nanosleep(&delay, NULL);
 }
