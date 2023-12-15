@@ -53,8 +53,10 @@ void manager_parse_lock(intptr_t thread_id);
 
 int manager_parse_unlock();
 
-/// Sleeps
-void thread_wait(intptr_t thread_id);
+/// Sleeps for the duration of the thread's queued wait time.
+/// @param thread_id The id of the thread that is to sleep.
+/// @return 1 if thread slept (and released the parse lock), 0 otherwise.
+int thread_wait(intptr_t thread_id);
 
 void set_wait(unsigned int delay_ms, unsigned int thread_id);
 

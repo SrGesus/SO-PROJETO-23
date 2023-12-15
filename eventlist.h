@@ -18,7 +18,7 @@ struct Event {
 
   unsigned int
       *data; /// Array of size rows * cols with the reservations for each seat.
-  pthread_rwlock_t
+  pthread_mutex_t
       *seat_locks; /// Array of size rows * cols with rwlocks for each seat.
 };
 

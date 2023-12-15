@@ -67,7 +67,7 @@ void manager_parse_lock(intptr_t thread_id) {
   pthread_mutex_lock(&thread_manager->parse_mutex);
 
   // Wait time
-  thread_wait(thread_id);
+  while(thread_wait(thread_id));
 
   // Check barrier
   if (thread_manager->barred) {
@@ -80,7 +80,7 @@ int manager_parse_unlock() {
   return pthread_mutex_unlock(&thread_manager->parse_mutex);
 }
 
-void thread_wait(intptr_t thread_id) {
+int thread_wait(intptr_t thread_id) {
   unsigned int delay_ms = 0;
   wait_time_t *cur;
   wait_time_t *next;
@@ -100,7 +100,7 @@ void thread_wait(intptr_t thread_id) {
   pthread_mutex_unlock(&thread_manager->time_mutex);
 
   if (delay_ms == 0)
-    return;
+    return 0;
 
   printf("Thread %lu Waiting %ums...\n", thread_id, delay_ms);
 
@@ -111,6 +111,7 @@ void thread_wait(intptr_t thread_id) {
   nanosleep(&delay, NULL);
 
   pthread_mutex_lock(&thread_manager->parse_mutex);
+  return 1;
 }
 
 void set_wait(unsigned int delay_ms, unsigned int thread_id) {
@@ -118,7 +119,7 @@ void set_wait(unsigned int delay_ms, unsigned int thread_id) {
 
   if (thread_id > thread_manager->max_thread) {
     fprintf(stderr,
-            "Waiting for thread_id %u is not possible with MAX_THREAD=%u",
+            "Waiting for thread_id %u is not possible with MAX_THREAD=%u\n",
             thread_id, thread_manager->max_thread);
     return;
   }
@@ -154,6 +155,15 @@ void set_wait(unsigned int delay_ms, unsigned int thread_id) {
 }
 
 void manager_destroy() {
+  for (size_t i = 0; i < thread_manager->max_thread; i++) {
+    wait_time_t * next, * cur;
+    next = thread_manager->threads[i].wait;
+    while (next) {
+      cur = next;
+      next = cur->next;
+      free(cur);
+    }
+  }
   pthread_mutex_destroy(&thread_manager->time_mutex);
   pthread_mutex_destroy(&thread_manager->parse_mutex);
   free(thread_manager->threads);
