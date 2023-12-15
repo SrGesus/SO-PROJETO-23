@@ -25,11 +25,11 @@ int manager_init(int max_thread, int fd_in, int fd_out) {
     thread_manager = NULL;
     return -1;
   }
-  thread_manager->max_thread = max_thread;
+  thread_manager->max_thread = (unsigned int)max_thread;
   thread_manager->fd_in = fd_in;
   thread_manager->fd_out = fd_out;
-  for (int i = 0; i < thread_manager->max_thread; i++)
-    thread_manager->threads[i].thread_id = i + 1;
+  for (size_t i = 0; i < thread_manager->max_thread; i++)
+    thread_manager->threads[i].thread_id = (intptr_t)i + 1;
   return 0;
 }
 
@@ -40,12 +40,12 @@ int manager_run(void *(*start_routine)(void *)) {
 
   thread_manager->barred = 0;
 
-  for (int i = 0; i < thread_manager->max_thread; i++) {
+  for (size_t i = 0; i < thread_manager->max_thread; i++) {
     thread_data_t *data = &thread_manager->threads[i];
     pthread_create(&data->thread, NULL, start_routine, (void *)data->thread_id);
   }
 
-  for (int i = 0; i < thread_manager->max_thread; i++) {
+  for (size_t i = 0; i < thread_manager->max_thread; i++) {
     pthread_join(thread_manager->threads[i].thread, NULL);
   }
 
@@ -61,7 +61,7 @@ void manager_parse_lock(intptr_t thread_id) {
   pthread_mutex_lock(&thread_manager->parse_mutex);
 
   // Wait time
-  wait_time(thread_id);
+  thread_wait(thread_id);
 
   // Check barrier
   if (thread_manager->barred) {
@@ -74,7 +74,7 @@ int manager_parse_unlock() {
   return pthread_mutex_unlock(&thread_manager->parse_mutex);
 }
 
-void wait_time(intptr_t thread_id) {
+void thread_wait(intptr_t thread_id) {
   unsigned int delay_ms;
   struct timespec delay;
 
@@ -91,10 +91,15 @@ void wait_time(intptr_t thread_id) {
   nanosleep(&delay, NULL);
 }
 
-void set_wait(unsigned int delay_ms, int thread_id) {
+void set_wait(unsigned int delay_ms, unsigned int thread_id) {
+  if (thread_id > thread_manager->max_thread) {
+    fprintf(stderr, "Waiting for thread_id %u is not possible with MAX_THREAD=%u", thread_id, thread_manager->max_thread);
+    return;
+  }
+
   pthread_mutex_lock(&thread_manager->time_mutex);
   if (thread_id == 0)
-    for (int i = 0; i <= thread_manager->max_thread; i++)
+    for (size_t i = 0; i < thread_manager->max_thread; i++)
       thread_manager->threads[i].wait = delay_ms;
   else
     thread_manager->threads[thread_id - 1].wait = delay_ms;

@@ -22,8 +22,7 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols);
 /// Creates a new reservation for the given event.
 /// @param event_id Id of the event to create a reservation for.
 /// @param num_seats Number of seats to reserve.
-/// @param xs Array of rows of the seats to reserve.
-/// @param ys Array of columns of the seats to reserve.
+/// @param seats Sorted array of the seats to reserve.
 /// @return 0 if the reservation was created successfully, 1 otherwise.
 int ems_reserve(unsigned int event_id, size_t num_seats, seat_t *seats);
 

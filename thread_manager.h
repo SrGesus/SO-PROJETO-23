@@ -5,12 +5,16 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+typedef struct wait_time {
+  unsigned int delay;
+  struct wait_time *next;
+} wait_time_t;
+
 typedef struct thread_data {
   // 1-indexed thread id
   intptr_t thread_id;
   pthread_t thread;
-  unsigned int wait;
-  // int status;
+  wait_time_t wait;
 } thread_data_t;
 
 typedef struct manager {
@@ -24,13 +28,17 @@ typedef struct manager {
   int barred;
   // Array for threads
   thread_data_t *threads;
-  int max_thread;
+  unsigned int max_thread;
   int fd_in;
   int fd_out;
 } poll_t;
 
 extern poll_t *thread_manager;
 
+/// Initializes the thread apparattus.
+/// @param max_thread Number of threads to be run.
+/// @param fd_in Input file descriptor.
+/// @param fd_out Output file descriptor.
 int manager_init(int max_thread, int fd_in, int fd_out);
 
 /// Starts threads for given start_routine
@@ -45,9 +53,10 @@ void manager_parse_lock(intptr_t thread_id);
 
 int manager_parse_unlock();
 
-void wait_time(intptr_t thread_id);
+/// Sleeps
+void thread_wait(intptr_t thread_id);
 
-void set_wait(unsigned int delay_ms, int thread_id);
+void set_wait(unsigned int delay_ms, unsigned int thread_id);
 
 void manager_destroy();
 

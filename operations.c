@@ -6,6 +6,7 @@
 #include "operations.h"
 #include "thread_manager.h"
 #include "write.h"
+#include "constants.h"
 
 // meter lock antes de write_fmt
 static struct EventList *event_list = NULL;
@@ -98,7 +99,6 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
   event->cols = num_cols;
   event->reservations = 0;
   event->data = malloc(num_rows * num_cols * sizeof(unsigned int));
-  pthread_rwlock_init(&event->show_lock, NULL);
 
   if (event->data == NULL) {
     fprintf(stderr, "Error allocating memory for event data\n");
@@ -106,8 +106,21 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
     return 1;
   }
 
+  event->seat_locks = malloc(num_rows * num_cols * sizeof(pthread_rwlock_t));
+
+  if (event->seat_locks == NULL) {
+    fprintf(stderr, "Error allocating memory for event seat_locks\n");
+    free(event->data);
+    free(event);
+    return 1;
+  }
+
+  pthread_rwlock_init(&event->show_lock, NULL);
+  pthread_mutex_init(&event->reservation_mutex, NULL);
+
   for (size_t i = 0; i < num_rows * num_cols; i++) {
     event->data[i] = 0;
+    pthread_rwlock_init(&(event->seat_locks[i]), NULL);
   }
 
   if (append_to_list(event_list, event) != 0) {
@@ -133,10 +146,11 @@ int ems_reserve(unsigned int event_id, size_t num_seats, seat_t *seats) {
     return 1;
   }
 
-  unsigned int reservation_id = ++event->reservations;
+  // No showing
+  pthread_rwlock_rdlock(&event->show_lock);
 
-  size_t i = 0;
-  for (; i < num_seats; i++) {
+  size_t i;
+  for (i = 0; i < num_seats; i++) {
     size_t row = seats[i].x;
     size_t col = seats[i].y;
 
@@ -145,23 +159,46 @@ int ems_reserve(unsigned int event_id, size_t num_seats, seat_t *seats) {
       break;
     }
 
+    if (DEBUG)
+      printf("DEBUG: Lock seat: X: %lu, Y: %lu\n", row, col);
+
+    // Lock requested seats
+    pthread_rwlock_wrlock(&event->seat_locks[seat_index(event, row, col)]);
+
     if (*get_seat_with_delay(event, seat_index(event, row, col)) != 0) {
       fprintf(stderr, "Seat already reserved\n");
+      num_seats++;
       break;
     }
-
-    *get_seat_with_delay(event, seat_index(event, row, col)) = reservation_id;
   }
 
-  // If the reservation was not successful, free the seats that were reserved.
+  // If the reservation was not successful, unlock the seats.
   if (i < num_seats) {
-    event->reservations--;
     for (size_t j = 0; j < i; j++) {
-      *get_seat_with_delay(event, seat_index(event, seats[j].x, seats[j].y)) =
-          0;
+      pthread_rwlock_unlock(&event->seat_locks[seat_index(event, seats[j].x, seats[j].y)]);
     }
+    pthread_rwlock_unlock(&event->show_lock);
     return 1;
   }
+
+
+  pthread_mutex_lock(&event->reservation_mutex);
+  unsigned int reservation_id = ++event->reservations;
+  pthread_mutex_unlock(&event->reservation_mutex);
+
+  // Reserve seats
+  for (i = 0; i < num_seats; i++) {
+    size_t row = seats[i].x;
+    size_t col = seats[i].y;
+
+    // Reserve seat
+    *get_seat_with_delay(event, seat_index(event, row, col)) = reservation_id;
+
+    // Unlock Seat
+    pthread_rwlock_unlock(&event->seat_locks[seat_index(event, seats[i].x, seats[i].y)]);
+  }
+
+  pthread_rwlock_unlock(&event->show_lock);
 
   return 0;
 }
@@ -171,6 +208,7 @@ int ems_show(int fd_out, unsigned int event_id) {
     fprintf(stderr, "EMS state must be initialized\n");
     return 1;
   }
+
 
   struct Event *event = get_event_with_delay(event_id);
 
@@ -186,6 +224,9 @@ int ems_show(int fd_out, unsigned int event_id) {
     fprintf(stderr, "Out of Memory\n");
     return 1;
   }
+  
+
+
   // Write to buffer
   pthread_rwlock_wrlock(&event->show_lock);
   for (size_t i = 1; i <= event->rows; i++) {
@@ -195,6 +236,7 @@ int ems_show(int fd_out, unsigned int event_id) {
     }
   }
   pthread_rwlock_unlock(&event->show_lock);
+
 
   // Write to file
   pthread_mutex_lock(&thread_manager->print_mutex);

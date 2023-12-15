@@ -47,7 +47,7 @@ int process(int max_thread, const char *folder, const char *file) {
   // while (read_line(fd_in, fdout) != 1)
   //   ; // read_bach returns 1 when it reaches EOC
   while (manager_run(thread_routine))
-    ; // read_bach returns 1 when it reaches EOC
+    ; // manager_run returns 1 when it reaches EOC
   manager_destroy();
   close(fd_in);
   fsync(fdout);
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
     while ((dp = readdir(dirp))) {
       if (active_proc >= max_proc) {
         pid = wait(&status);
-        //printf("Child process %d was terminated with status %d\n", pid, status);
+        printf("Child process %d was terminated with status %d\n", pid, status);
         active_proc--;
       }
       if (is_jobs_file(dp->d_name)) {
@@ -113,11 +113,13 @@ int main(int argc, char *argv[]) {
         if (pid == 0) { // processo filho
           exit(process(max_thread, argv[1], dp->d_name));
         }
+        if (DEBUG)
+          printf("DEBUG: Starting process %d for %s\n", pid, dp->d_name);
       }
     }
     while (active_proc > 0) {
       pid = wait(&status);
-      //printf("Child process %d was terminated with status %d\n", pid, status);
+      printf("Child process %d was terminated with status %d\n", pid, status);
       active_proc--;
     }
     closedir(dirp);

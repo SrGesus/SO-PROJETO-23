@@ -70,7 +70,6 @@ intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out) {
 
   case CMD_SHOW:
     if (parse_show(fd_in, &event_id) != 0) {
-      fprintf(stderr, "Invalid command. See HELP for usage\n");
       return -1;
     }
 
@@ -93,14 +92,14 @@ intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out) {
     break;
 
   case CMD_WAIT:
-    if (parse_wait(fd_in, &delay, NULL) == -1) { // thread_id is not implemented
-      fprintf(stderr, "Invalid command. See HELP for usage\n");
+    if (parse_wait(fd_in, &delay, &event_id) == -1) { // thread_id is not implemented
       return -1;
     }
 
     if (delay > 0) {
       printf("Waiting...\n");
-      ems_wait(delay);
+      
+      set_wait(delay, event_id);
     }
 
     // Stop other threads from reading 
@@ -128,8 +127,7 @@ intptr_t read_line(intptr_t thread_id, int fd_in, int fd_out) {
 
   case CMD_BARRIER:
     thread_manager->barred = 1;
-    // Stop other threads from reading 
-    // and bar them.
+    // Stop other threads from reading before flag is changed
     manager_parse_unlock();
     break;
 

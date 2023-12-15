@@ -41,6 +41,8 @@ static void free_event(struct Event *event) {
   if (!event)
     return;
 
+  pthread_rwlock_destroy(&event->show_lock);
+  pthread_mutex_destroy(&event->reservation_mutex);
   free(event->data);
   free(event);
 }
