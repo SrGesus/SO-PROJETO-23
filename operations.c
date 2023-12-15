@@ -160,7 +160,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, seat_t *seats) {
       printf("DEBUG: Locking seat: X: %lu, Y: %lu\n", row, col);
 
     // Lock requested seats
-    pthread_rwlock_wrlock(&event->seat_locks[seat_index(event, row, col)]);
+    //pthread_rwlock_wrlock(&event->seat_locks[seat_index(event, row, col)]);
 
     if (DEBUG)
       printf("DEBUG: Locked seat: X: %lu, Y: %lu\n", row, col);
@@ -176,10 +176,9 @@ int ems_reserve(unsigned int event_id, size_t num_seats, seat_t *seats) {
   if (i < num_seats) {
     
     for (size_t j = 0; j < i; j++) {
-      pthread_rwlock_unlock(
-          &event->seat_locks[seat_index(event, seats[j].x, seats[j].y)]);
+      //pthread_rwlock_unlock(
+          //&event->seat_locks[seat_index(event, seats[j].x, seats[j].y)]);
     }
-    pthread_rwlock_unlock(&event->show_lock);
     return 1;
   }
 
@@ -189,8 +188,8 @@ int ems_reserve(unsigned int event_id, size_t num_seats, seat_t *seats) {
 
   if (SHOW_LOCKS)
     printf("DEBUG: Locked reservation\n");
-  unsigned int reservation_id = ++event->reservations;
   pthread_mutex_unlock(&event->reservation_mutex);
+  unsigned int reservation_id = ++event->reservations;
 
   // No showing
   pthread_rwlock_rdlock(&event->show_lock);
@@ -204,8 +203,8 @@ int ems_reserve(unsigned int event_id, size_t num_seats, seat_t *seats) {
     *get_seat_with_delay(event, seat_index(event, row, col)) = reservation_id;
 
     // Unlock Seat
-    pthread_rwlock_unlock(
-        &event->seat_locks[seat_index(event, seats[i].x, seats[i].y)]);
+    //pthread_rwlock_unlock(
+        //&event->seat_locks[seat_index(event, seats[i].x, seats[i].y)]);
   }
 
   pthread_rwlock_unlock(&event->show_lock);
@@ -255,6 +254,7 @@ int ems_show(int fd_out, unsigned int event_id) {
     }
     write_fmt(fd_out, "\n");
   }
+  write_fmt(fd_out, "\n");
   pthread_mutex_unlock(&thread_manager->print_mutex);
 
   free(buf_seat);
@@ -272,6 +272,7 @@ int ems_list_events(int fd_out) {
 
   if (event_list->head == NULL) {
     write_fmt(fd_out, "No events\n");
+    pthread_mutex_unlock(&thread_manager->print_mutex);
     return 0;
   }
 
