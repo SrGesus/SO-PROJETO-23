@@ -2,8 +2,8 @@
 #define THREAD_manager_H
 
 #include <pthread.h>
-#include <stdlib.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef struct wait_time {
   unsigned int delay;
@@ -14,7 +14,7 @@ typedef struct thread_data {
   // 1-indexed thread id
   intptr_t thread_id;
   pthread_t thread;
-  wait_time_t wait;
+  wait_time_t *wait;
 } thread_data_t;
 
 typedef struct manager {

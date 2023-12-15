@@ -1,8 +1,8 @@
 #ifndef EMS_OPERATIONS_H
 #define EMS_OPERATIONS_H
 
-#include <stddef.h>
 #include "seat.h"
+#include <stddef.h>
 
 /// Initializes the EMS state.
 /// @param delay_ms State access delay in milliseconds.

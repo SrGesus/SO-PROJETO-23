@@ -7,17 +7,18 @@
 #include <stddef.h>
 
 struct Event {
-  pthread_rwlock_t show_lock; /// Lock to make sure no reservations while showing
+  pthread_rwlock_t
+      show_lock; /// Lock to make sure no reservations while showing
   pthread_mutex_t reservation_mutex; /// Lock for getting new reservation_id
-  unsigned int id;           /// Event id
-  unsigned int reservations; /// Number of reservations for the event.
+  unsigned int id;                   /// Event id
+  unsigned int reservations;         /// Number of reservations for the event.
 
   size_t cols; /// Number of columns.
   size_t rows; /// Number of rows.
 
   unsigned int
       *data; /// Array of size rows * cols with the reservations for each seat.
-  pthread_rwlock_t 
+  pthread_rwlock_t
       *seat_locks; /// Array of size rows * cols with rwlocks for each seat.
 };
 

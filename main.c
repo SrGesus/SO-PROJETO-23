@@ -31,7 +31,7 @@ int process(int max_thread, const char *folder, const char *file) {
   strcpy(total_path, folder);
   strcat(total_path, "/");
   strcat(total_path, file);
-  //printf("Initiating job: %s\n", total_path);
+  // printf("Initiating job: %s\n", total_path);
   int fd_in = open(total_path, O_RDONLY);
   if (fd_in < 0) {
     fprintf(stderr, "Failed to open file: %s", total_path);
@@ -52,7 +52,7 @@ int process(int max_thread, const char *folder, const char *file) {
   close(fd_in);
   fsync(fdout);
   close(fdout);
-  //printf("Finished job: %s\n", total_path);
+  // printf("Finished job: %s\n", total_path);
   return 0;
 }
 
