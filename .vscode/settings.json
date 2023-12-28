@@ -1,6 +1,5 @@
 {
     "files.associations": {
-        "constants.h": "c",
-        "operations.h": "c"
+        "constants.h": "c"
     }
 }
