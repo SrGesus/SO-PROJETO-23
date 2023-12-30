@@ -6,36 +6,21 @@
 #include <stddef.h>
 #include <string.h>
 #include <unistd.h>
-
-int write_fmt(int fd, const char *fmt, ...) {
-  const size_t buffer_size = 256;
-  char buffer[buffer_size];
-  va_list args;
-
-  va_start(args, fmt);
-  vsnprintf(buffer, buffer_size, fmt, args);
-  va_end(args);
-  size_t len = strlen(buffer);
-  size_t done = 0;
-
-  while (len > 0) {
-    ssize_t bytes_written = write(fd, buffer + done, len);
-
-    if (bytes_written < 0) {
-      fprintf(stderr, "Write error: %s\n", strerror(errno));
-      return -1;
-    }
-
-    /* might not have managed to write all, len becomes what remains */
-    len -= (size_t)bytes_written;
-    done += (size_t)bytes_written;
-  }
-  return 0;
-}
+#include "../common/io.h"
+#include "../common/constants.h"
 
 int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const* server_pipe_path) {
   int server_pipe, req_pipe, resp_pipe;
+  char msg[ + 40 + 40];
+  int req_pipe_path_size = strlen(req_pipe_path);
+  int resp_pipe_path_size = strlen(resp_pipe_path);
+  msg[0] = '1';
 
+  strcpy(msg + 1, req_pipe_path);
+  memset(msg + 1 + req_pipe_path_size, '\0', 40 - req_pipe_path_size);
+  strcpy(msg + 1 + 40, resp_pipe_path);
+ 
+  memset(msg + 1 + 40 + resp_pipe_path_size, '\0', 40 - resp_pipe_path_size);
   if((server_pipe = open(server_pipe_path, O_RDWR)) < 0){
     fprintf(stderr, "[ERR]: Failed to open server pipe %s: %s\n",server_pipe_path,strerror(errno));
     return 1;
@@ -56,7 +41,10 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
     fprintf(stderr, "[ERR]: Failed to create resp_pipe %s: %s\n", resp_pipe_path, strerror(errno));
     return 1;
   }
-  if (write_fmt(server_pipe,"%s\n%s",req_pipe_path,resp_pipe_path) < 0) return 1;
+  if (!print_nstr(server_pipe,1+40+40,msg)){
+    fprintf(stderr, "[ERR]: Failed to write msg %s: %s\n", msg, strerror(errno));
+    return 1;
+  }
 
   if ((req_pipe = open(req_pipe_path,O_WRONLY)) < 0){
     fprintf(stderr, "[ERR]: Failed to open req_pipe %s: %s\n", req_pipe_path, strerror(errno));
