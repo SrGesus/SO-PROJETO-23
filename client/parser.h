@@ -1,5 +1,5 @@
-#ifndef CLIENT_PARSER_H
-#define CLIENT_PARSER_H
+#ifndef PARSER_H
+#define PARSER_H
 
 #include <stddef.h>
 
@@ -50,4 +50,4 @@ int parse_show(int fd, unsigned int *event_id);
 /// @return 0 if no thread was specified, 1 if a thread was specified, -1 on error.
 int parse_wait(int fd, unsigned int *delay, unsigned int *thread_id);
 
-#endif  // CLIENT_PARSER_H
+#endif // PARSER_H

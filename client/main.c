@@ -8,7 +8,7 @@
 #include "parser.h"
 
 int main(int argc, char* argv[]) {
-  if (argc < 5) {
+  if (argc != 5) {
     fprintf(stderr, "Usage: %s <request pipe path> <response pipe path> <server pipe path> <.jobs file path>\n",
             argv[0]);
     return 1;
@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
   }
 
   const char* dot = strrchr(argv[4], '.');
-  if (dot == NULL || dot == argv[4] || strlen(dot) != 5 || strcmp(dot, ".jobs") ||
+  if (dot == NULL || dot == argv[4] || strcmp(dot, ".jobs") ||
       strlen(argv[4]) > MAX_JOB_FILE_NAME_SIZE) {
     fprintf(stderr, "The provided .jobs file path is not valid. Path: %s\n", argv[1]);
     return 1;
