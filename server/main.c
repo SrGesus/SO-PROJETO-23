@@ -129,15 +129,35 @@ int parse_create(session_t * session) {
 
 int parse_reserve(session_t * session) {
   char next;
-  unsigned int event_id, num_rows, num_cols;
+  unsigned int event_id, num_seats;
+  unsigned int Xs[MAX_RESERVATION_SIZE], Ys[MAX_RESERVATION_SIZE];
 
   if (parse_uint(session->request_pipe, &event_id, &next) || next != SEPARATOR_CHAR ||
-      parse_uint(session->request_pipe, &num_rows, &next) || next != SEPARATOR_CHAR ||
-      parse_uint(session->request_pipe, &num_cols, &next)) {
+      parse_uint(session->request_pipe, &num_seats, &next)) {
     fprintf(stderr, "[ERR]: Failed to parse create operation\n");
     cleanup(session->request_pipe);
     return 1;
   }
+
+  for (int i = 0; i < num_seats; i++) {
+    if (parse_uint(session->request_pipe, Xs+i, &next) || next != SEPARATOR_CHAR) {
+      fprintf(stderr, "[ERR]: Failed to parse create operation\n");
+      cleanup(session->request_pipe);
+      return 1;
+    }
+  }
+  
+  for (int i = 0; i < num_seats; i++) {
+    if (parse_uint(session->request_pipe, Ys+i, &next) || next != SEPARATOR_CHAR) {
+      fprintf(stderr, "[ERR]: Failed to parse create operation\n");
+      cleanup(session->request_pipe);
+      return 1;
+    }
+  }
+
+  int result = ems_reserve(event_id, num_seats, Xs, Ys);
+
+  print_uint(session->response_pipe, (unsigned int)result);
 
   return 0;
 }
@@ -172,7 +192,7 @@ int parse_operation(session_t * session) {
     case CREATE:
       return parse_create(session);
     case RESERVE:
-
+      return parse_reserve(session);
       break;
     case SHOW:
 
