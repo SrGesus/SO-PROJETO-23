@@ -6,8 +6,8 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
-#include "common/constants.h"
-#include "common/io.h"
+#include "../common/constants.h"
+#include "../common/io.h"
 #include "operations.h"
 #include "session.h"
 #include "common/op_code.h"
