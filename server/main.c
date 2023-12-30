@@ -13,6 +13,12 @@
 #include "common/op_code.h"
 
 
+static void cleanup(int fd) {
+  char ch;
+  while (read(fd, &ch, 1) == 1 && ch != '\n')
+    ;
+}
+
 /// @brief Attempts to initialize register fifo pipe
 /// @param register_fifo pointer where pipe file descriptor will be written
 /// @param register_pipe_path path to pipe file
@@ -31,13 +37,13 @@ int initialize_pipe(int * register_fifo, const char * register_pipe_path) {
   }
 
   if (DEBUG_IO) {
-    printf("[DEBUG]: Opening pipe %s (O_RDWR)\n", register_pipe_path);
+    printf("[DEBUG]: Opening pipe \"%s\" (O_RDWR)\n", register_pipe_path);
   }
   // Opening with Read Write causes thread to block when nothing is sent (instead of EOF)
   // Means server MUST be started before client
   *register_fifo = open(register_pipe_path, O_RDWR);
   if (*register_fifo < 0) {
-    fprintf(stderr, "[ERR]: Failed to open register fifo %s: %s\n", register_pipe_path, strerror(errno));
+    fprintf(stderr, "[ERR]: Failed to open register fifo \"%s\": %s\n", register_pipe_path, strerror(errno));
     return 1;
   }
   
@@ -60,7 +66,9 @@ int initiate_session(session_t * session, int register_fifo) {
   
   if (DEBUG_REGISTER) {
     printf("[DEBUG]: Register Fifo received %zdB\n", ret);
-    fputs(buffer, stdout);
+    for (int i = 0; i < (int)ret; ++i) {
+      printf("%c", buffer[i]);
+    }
     printf("\n");
   }
 
@@ -75,22 +83,22 @@ int initiate_session(session_t * session, int register_fifo) {
   }
 
   if (DEBUG_IO) {
-    printf("[DEBUG]: Opening pipe %s (O_RDONLY)\n", req_pipe_path);
+    printf("[DEBUG]: Opening pipe \"%s\" (O_RDONLY)\n", req_pipe_path);
   }
 
   int req_pipe = open(req_pipe_path, O_RDONLY);
   if (req_pipe == -1) {
-    fprintf(stderr, "[ERR]: Failed to open request pipe %s: %s\n", req_pipe_path, strerror(errno));
+    fprintf(stderr, "[ERR]: Failed to open request pipe \"%s\": %s\n", req_pipe_path, strerror(errno));
     return 1;
   }
 
   if (DEBUG_IO) {
-    printf("[DEBUG]: Opening pipe %s (O_WRONLY)\n", resp_pipe_path);
+    printf("[DEBUG]: Opening pipe \"%s\" (O_WRONLY)\n", resp_pipe_path);
   }
   
   int resp_pipe = open(resp_pipe_path, O_WRONLY);
   if (resp_pipe == -1) {
-    fprintf(stderr, "[ERR]: Failed to open response pipe %s: %s\n", resp_pipe_path, strerror(errno));
+    fprintf(stderr, "[ERR]: Failed to open response pipe \"%s\": %s\n", resp_pipe_path, strerror(errno));
     return 1;
   }
 
@@ -104,24 +112,34 @@ int parse_create(session_t * session) {
   char next;
   unsigned int event_id, num_rows, num_cols;
 
-  if (parse_uint(session->request_pipe, &event_id, &next) || next != SEPARATOR_CHAR) {
-    cleanup(session->request_pipe);
-    return 1;
-  }
-  if (parse_uint(session->request_pipe, &num_rows, &next) || next != SEPARATOR_CHAR) {
-    cleanup(session->request_pipe);
-    return 1;
-  }
-  if (parse_uint(session->request_pipe, &num_cols, &next)) {
+  if (parse_uint(session->request_pipe, &event_id, &next) || next != SEPARATOR_CHAR ||
+      parse_uint(session->request_pipe, &num_rows, &next) || next != SEPARATOR_CHAR ||
+      parse_uint(session->request_pipe, &num_cols, &next)) {
+    fprintf(stderr, "[ERR]: Failed to parse create operation\n");
     cleanup(session->request_pipe);
     return 1;
   }
 
   int result = ems_create(event_id, num_rows, num_cols);
 
-  print_uint(session->response_pipe, result);
-  
+  print_uint(session->response_pipe, (unsigned int)result);
+
   return result;
+}
+
+int parse_reserve(session_t * session) {
+  char next;
+  unsigned int event_id, num_rows, num_cols;
+
+  if (parse_uint(session->request_pipe, &event_id, &next) || next != SEPARATOR_CHAR ||
+      parse_uint(session->request_pipe, &num_rows, &next) || next != SEPARATOR_CHAR ||
+      parse_uint(session->request_pipe, &num_cols, &next)) {
+    fprintf(stderr, "[ERR]: Failed to parse create operation\n");
+    cleanup(session->request_pipe);
+    return 1;
+  }
+
+  return 0;
 }
 
 /// @brief Parses and executes a single operation
@@ -148,10 +166,11 @@ int parse_operation(session_t * session) {
 
     switch (operation) {
     case QUIT:
-      return 0;
+      if (DEBUG)
+        printf("[DEBUG]: Quit session n.%d\n", session->id);
+      return -1;
     case CREATE:
-
-      break;
+      return parse_create(session);
     case RESERVE:
 
       break;
@@ -163,7 +182,7 @@ int parse_operation(session_t * session) {
       break;
     default:
       fprintf(stderr, "[ERR]: Invalid operation\n");
-      break;;
+      break;
     }
     return 0;
 }
@@ -209,7 +228,8 @@ int main(int argc, char* argv[]) {
   }
 
   // Single Worker thread
-  while (true) {
+  while (parse_operation(&single_session) != -1) {
+
   }
 
   // while (1) {

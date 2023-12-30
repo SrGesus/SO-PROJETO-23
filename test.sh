@@ -1,3 +1,4 @@
 # Some commands to help debugging
 
-printf "10000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\0" > pipe
+
+printf "1req\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0resp\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0" > pipe
