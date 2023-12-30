@@ -77,3 +77,18 @@ int print_str(int fd, const char *str) {
 
   return 0;
 }
+
+
+int print_nstr(int fd, size_t len, const char *str) {
+  while (len > 0) {
+    ssize_t written = write(fd, str, len);
+    if (written == -1) {
+      return 1;
+    }
+
+    str += (size_t)written;
+    len -= (size_t)written;
+  }
+
+  return 0;
+}

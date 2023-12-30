@@ -3,3 +3,4 @@ server/ems
 *.o
 *.out
 .vscode
+*.pipe

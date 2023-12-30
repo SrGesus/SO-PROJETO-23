@@ -10,6 +10,8 @@
 #include "common/io.h"
 #include "operations.h"
 #include "session.h"
+#include "common/op_code.h"
+
 
 /// @brief Attempts to initialize register fifo pipe
 /// @param register_fifo pointer where pipe file descriptor will be written
@@ -47,32 +49,36 @@ int initialize_pipe(int * register_fifo, const char * register_pipe_path) {
 /// @param register_fifo pipe file descriptor
 /// @return 0 if sucessful, 1 otherwise
 int initiate_session(session_t * session, int register_fifo) {
-  char buffer[BUFSIZ];
-  ssize_t ret = read(register_fifo, buffer, BUFSIZ - 1);
+  const size_t BUFFER_SIZE = 1 /* OP_CODE */ + 16 /*session_id*/ + 40*2 /* pipe_paths*/;
+  char buffer[BUFFER_SIZE];
+  ssize_t ret = read(register_fifo, buffer, BUFFER_SIZE);
   if (ret == -1) {
     // ret == -1 indicates error
     fprintf(stderr, "[ERR]: Failed to read register fifo: %s\n", strerror(errno));
     exit(EXIT_FAILURE);
   }
-  buffer[ret] = 0;
+  
   if (DEBUG_REGISTER) {
-    printf("[DEBUG]: Register Fifo received %zdB\n%s\n", ret, buffer);
+    printf("[DEBUG]: Register Fifo received %zdB\n", ret);
+    fputs(buffer, stdout);
+    printf("\n");
   }
 
-  char * req_pipe_path = buffer;
-  char * resp_pipe_path;
-  resp_pipe_path = strchr(buffer, '\n');
-  *resp_pipe_path = '\0';
-  resp_pipe_path++;
+  buffer[BUFFER_SIZE-1] = '\0';
+  buffer[BUFFER_SIZE-1-40] = '\0';
+
+  char * req_pipe_path = buffer+1+16;
+  char * resp_pipe_path = buffer+1+16+40;
 
   if (DEBUG_REGISTER) {
     printf("[DEBUG]: Requests pipe: \"%s\", Response pipe: \"%s\"\n", req_pipe_path, resp_pipe_path);
   }
 
   if (DEBUG_IO) {
-    printf("[DEBUG]: Opening pipe %s (O_RDONLY)\n", req_pipe_path);
+    printf("[DEBUG]: Opening pipe %s (O_RDWR)\n", req_pipe_path);
   }
-  int req_pipe = open(req_pipe_path, O_RDONLY);
+
+  int req_pipe = open(req_pipe_path, O_RDWR);
   if (req_pipe == -1) {
     fprintf(stderr, "[ERR]: Failed to open request pipe %s: %s\n", req_pipe_path, strerror(errno));
     return 1;
@@ -81,6 +87,7 @@ int initiate_session(session_t * session, int register_fifo) {
   if (DEBUG_IO) {
     printf("[DEBUG]: Opening pipe %s (O_WRONLY)\n", resp_pipe_path);
   }
+  
   int resp_pipe = open(resp_pipe_path, O_WRONLY);
   if (resp_pipe == -1) {
     fprintf(stderr, "[ERR]: Failed to open response pipe %s: %s\n", resp_pipe_path, strerror(errno));
@@ -91,6 +98,46 @@ int initiate_session(session_t * session, int register_fifo) {
   session->response_pipe = resp_pipe;
 
   return 0;
+}
+
+int parse_operation(session_t * session) {
+    char operation = '0';
+    
+    ssize_t read_bytes = read(session->request_pipe, &operation, 1);
+    if (read_bytes == -1) {
+      fprintf(stderr, "[ERR]: Failed to read request\n");
+      return 1;
+    } else if (read_bytes == 0) {
+      // Finished reading
+      return 0;
+    }
+
+    if (DEBUG_REQUEST)
+      printf("[DEBUG]: Received operation %c\n", operation);
+
+    switch (operation) {
+    case SETUP:
+      
+      break;
+    case QUIT:
+
+      break;
+    case CREATE:
+
+      break;
+    case RESERVE:
+
+      break;
+    case SHOW:
+
+      break;
+    case LIST:
+
+      break;
+    default:
+      printf(stderr, "[ERR]: Invalid operation\n");
+      return 1;
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -135,19 +182,6 @@ int main(int argc, char* argv[]) {
 
   // Single Worker thread
   while (true) {
-    char operation = '0';
-    
-    ssize_t read_bytes = read(single_session.request_pipe, &operation, 1);
-    if (read_bytes == -1) {
-      fprintf(stderr, "[ERR]: Failed to read request\n");
-      return 1;
-    } else if (read_bytes == 0) {
-      // Finished reading
-      return 0;
-    }
-
-    if (DEBUG_REQUEST)
-      printf("[DEBUG]: Received operation %c\n", operation);
   }
 
   // while (1) {
