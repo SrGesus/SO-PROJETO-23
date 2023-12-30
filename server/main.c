@@ -49,7 +49,7 @@ int initialize_pipe(int * register_fifo, const char * register_pipe_path) {
 /// @param register_fifo pipe file descriptor
 /// @return 0 if sucessful, 1 otherwise
 int initiate_session(session_t * session, int register_fifo) {
-  const size_t BUFFER_SIZE = 1 /* OP_CODE */ + 16 /*session_id*/ + 40*2 /* pipe_paths*/;
+  const size_t BUFFER_SIZE = 1 /* OP_CODE */ + 40*2 /* pipe_paths*/;
   char buffer[BUFFER_SIZE];
   ssize_t ret = read(register_fifo, buffer, BUFFER_SIZE);
   if (ret == -1) {
@@ -67,18 +67,18 @@ int initiate_session(session_t * session, int register_fifo) {
   buffer[BUFFER_SIZE-1] = '\0';
   buffer[BUFFER_SIZE-1-40] = '\0';
 
-  char * req_pipe_path = buffer+1+16;
-  char * resp_pipe_path = buffer+1+16+40;
+  char * req_pipe_path = buffer+1;
+  char * resp_pipe_path = buffer+1+40;
 
   if (DEBUG_REGISTER) {
     printf("[DEBUG]: Requests pipe: \"%s\", Response pipe: \"%s\"\n", req_pipe_path, resp_pipe_path);
   }
 
   if (DEBUG_IO) {
-    printf("[DEBUG]: Opening pipe %s (O_RDWR)\n", req_pipe_path);
+    printf("[DEBUG]: Opening pipe %s (O_RDONLY)\n", req_pipe_path);
   }
 
-  int req_pipe = open(req_pipe_path, O_RDWR);
+  int req_pipe = open(req_pipe_path, O_RDONLY);
   if (req_pipe == -1) {
     fprintf(stderr, "[ERR]: Failed to open request pipe %s: %s\n", req_pipe_path, strerror(errno));
     return 1;
@@ -100,9 +100,36 @@ int initiate_session(session_t * session, int register_fifo) {
   return 0;
 }
 
+int parse_create(session_t * session) {
+  char next;
+  unsigned int event_id, num_rows, num_cols;
+
+  if (parse_uint(session->request_pipe, &event_id, &next) || next != SEPARATOR_CHAR) {
+    cleanup(session->request_pipe);
+    return 1;
+  }
+  if (parse_uint(session->request_pipe, &num_rows, &next) || next != SEPARATOR_CHAR) {
+    cleanup(session->request_pipe);
+    return 1;
+  }
+  if (parse_uint(session->request_pipe, &num_cols, &next)) {
+    cleanup(session->request_pipe);
+    return 1;
+  }
+
+  int result = ems_create(event_id, num_rows, num_cols);
+
+  print_uint(session->response_pipe, result);
+  
+  return result;
+}
+
+/// @brief Parses and executes a single operation
+/// @param session pointer to current session
+/// @return -1 if operation was QUIT, 0 if operation sucessful, 1 otherwise;
 int parse_operation(session_t * session) {
     char operation = '0';
-    
+
     ssize_t read_bytes = read(session->request_pipe, &operation, 1);
     if (read_bytes == -1) {
       fprintf(stderr, "[ERR]: Failed to read request\n");
@@ -112,16 +139,16 @@ int parse_operation(session_t * session) {
       return 0;
     }
 
+    unsigned int session_id;
+    char _i;
+    parse_uint(session->request_pipe, &session_id, &_i);
+
     if (DEBUG_REQUEST)
-      printf("[DEBUG]: Received operation %c\n", operation);
+      printf("[DEBUG]: Received operation %c in session %u\n", operation, session_id);
 
     switch (operation) {
-    case SETUP:
-      
-      break;
     case QUIT:
-
-      break;
+      return 0;
     case CREATE:
 
       break;
@@ -135,9 +162,10 @@ int parse_operation(session_t * session) {
 
       break;
     default:
-      printf(stderr, "[ERR]: Invalid operation\n");
-      return 1;
+      fprintf(stderr, "[ERR]: Invalid operation\n");
+      break;;
     }
+    return 0;
 }
 
 int main(int argc, char* argv[]) {

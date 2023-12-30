@@ -1,6 +1,8 @@
 #ifndef COMMON_IO_H
 #define COMMON_IO_H
 
+#include <stddef.h>
+
 /// Parses an unsigned integer from the given file descriptor.
 /// @param fd The file descriptor to read from.
 /// @param value Pointer to the variable to store the value in.
@@ -25,6 +27,6 @@ int print_str(int fd, const char *str);
 /// @param len Count of chars to write.
 /// @param str The string to write.
 /// @return 0 if the string was written successfully, 1 otherwise.
-int print_nstr(int fd, const char *str);
+int print_nstr(int fd, size_t len, const char *str);
 
 #endif  // COMMON_IO_H

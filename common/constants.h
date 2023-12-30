@@ -3,6 +3,9 @@
 #define MAX_JOB_FILE_NAME_SIZE 256
 #define MAX_SESSION_COUNT 1
 
+// Character that defines separator between integers
+#define SEPARATOR_CHAR '|'
+
 #define true 1
 #define false 0
 
