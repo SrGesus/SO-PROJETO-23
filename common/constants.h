@@ -3,8 +3,6 @@
 #define MAX_JOB_FILE_NAME_SIZE 256
 #define MAX_SESSION_COUNT 1
 
-// Character that defines separator between integers
-#define SEPARATOR_CHAR '|'
 #define MAX_PIPE_PATH_SIZE 40
 
 #define true 1

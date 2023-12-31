@@ -24,10 +24,10 @@ int print_str(int fd, const char *str);
 
 /// Writes a n chars to the given file descriptor.
 /// @param fd The file descriptor to write to.
-/// @param len Count of chars to write.
-/// @param str The string to write.
+/// @param len Count of bytes to write.
+/// @param buf The buffer to write
 /// @return 0 if the string was written successfully, 1 otherwise.
-int write_nstr(int fd, size_t len, const char *str);
+int write_nstr(int fd, size_t len, void *buf);
 
 /// Writes an unsigned integer to the given file descriptor.
 /// @param fd The file descriptor to write to.
@@ -46,6 +46,12 @@ int write_int(int fd, int value);
 /// @param value Pointer to the variable to store the value in.
 /// @return 0 if the integer was read successfully, 1 otherwise.
 int read_uint(int fd, unsigned int *value);
+
+/// Reads an integer from the given file descriptor.
+/// @param fd The file descriptor to read from.
+/// @param value Pointer to the variable to store the value in.
+/// @return 0 if the integer was read successfully, 1 otherwise.
+int read_int(int fd, int *value);
 
 /// Writes a size_t variable to the given file descriptor.
 /// @param fd The file descriptor to write to.

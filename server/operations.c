@@ -175,6 +175,10 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
     event->data[seat_index(event, xs[i], ys[i])] = reservation_id;
   }
 
+  if (DEBUG_OP) {
+    printf("[DEBUG]: Reserved %lu seats for event %u\n", num_seats, event_id);
+  }
+
   pthread_mutex_unlock(&event->mutex);
   return 0;
 }
@@ -215,22 +219,24 @@ int ems_show(int out_fd, unsigned int event_id) {
     return 1;
   }
 
+
   pthread_mutex_unlock(&event->mutex);
+  if (DEBUG_OP) {
+    printf("[DEBUG]: Showed event %u\n", event_id);
+  }
   return 0;
 }
 
 int ems_list_events(int out_fd) {
-  int result = 1;
-
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
-    write(out_fd, &result, sizeof(int));
+    write_int(out_fd, 1);
     return 1;
   }
 
   if (pthread_rwlock_rdlock(&event_list->rwl) != 0) {
     fprintf(stderr, "Error locking list rwl\n");
-    write(out_fd, &result, sizeof(int));
+    write_int(out_fd, 1);
     return 1;
   }
 
@@ -242,6 +248,7 @@ int ems_list_events(int out_fd) {
     if (print_str(out_fd, buff)) {
       perror("Error writing to file descriptor");
       pthread_rwlock_unlock(&event_list->rwl);
+      write_int(out_fd, 1);
       return 1;
     }
 
@@ -264,14 +271,19 @@ int ems_list_events(int out_fd) {
 
   unsigned int* buffer = malloc(sizeof(unsigned int) * length);
 
-  for (size_t i; i < length; i++, current->next) {
+  for (size_t i = 0; i < length; i++) {
     buffer[i] = current->event->id;
+    current = current->next;
   }
 
   if (write_nstr(out_fd, length * sizeof(unsigned int), buffer)) {
     perror("Error writing to file descriptor");
     pthread_rwlock_unlock(&event_list->rwl);
     return 1;
+  }
+
+  if (DEBUG_OP) {
+    printf("[DEBUG]: Listed %lu events\n", length);
   }
 
   pthread_rwlock_unlock(&event_list->rwl);

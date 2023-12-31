@@ -85,7 +85,7 @@ int write_uint(int fd, unsigned int value) {
   memcpy(buffer, &value, BUFFER_SIZE);
   size_t i = 0;
   while (i < BUFFER_SIZE) {
-    ssize_t written = write(fd, buffer + i, BUFFER_SIZE - i);
+    ssize_t written = write(fd, (void *)(buffer + i), BUFFER_SIZE - i);
     if (written == -1) {
       return 1;
     }
@@ -182,14 +182,14 @@ int read_size(int fd, size_t *value) {
   return 0;
 }
 
-int write_nstr(int fd, size_t len, const char *str) {
+int write_nstr(int fd, size_t len, void *buf) {
   while (len > 0) {
-    ssize_t written = write(fd, str, len);
+    ssize_t written = write(fd, buf, len);
     if (written == -1) {
       return 1;
     }
 
-    str += (size_t)written;
+    buf += (size_t)written;
     len -= (size_t)written;
   }
 
