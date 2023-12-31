@@ -15,7 +15,6 @@
 #include "common/io.h"
 #include "common/op_code.h"
 
-
 static void cleanup(int fd) {
   char ch;
   while (read(fd, &ch, 1) == 1 && ch != '\n')
@@ -138,11 +137,11 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
     fprintf(stderr, "[ERR]: Failed to write num_rows: %s\n", strerror(errno));
     return 1;
   }
-  if (write_nstr(req_pipe, sizeof(size_t)*num_seats, xs)) {
+  if (write_nstr(req_pipe, sizeof(size_t) * num_seats, xs)) {
     fprintf(stderr, "[ERR]: Failed to write X seat: %s\n", strerror(errno));
     return 1;
   }
-  if (write_nstr(req_pipe, sizeof(size_t)*num_seats, ys)) {
+  if (write_nstr(req_pipe, sizeof(size_t) * num_seats, ys)) {
     fprintf(stderr, "[ERR]: Failed to write Y seat: %s\n", strerror(errno));
     return 1;
   }
@@ -179,8 +178,7 @@ int ems_show(int out_fd, unsigned int event_id) {
     fprintf(stderr, "[ERR]: Failed to read response: %s\n", strerror(errno));
     return 1;
   }
-  if (result)
-    return result;
+  if (result) return result;
 
   // TO-DO read response
 
@@ -204,8 +202,7 @@ int ems_list_events(int out_fd) {
     fprintf(stderr, "[ERR]: Failed to read response: %s\n", strerror(errno));
     return 1;
   }
-  if (result)
-    return result;
+  if (result) return result;
 
   // TO-DO read response
 

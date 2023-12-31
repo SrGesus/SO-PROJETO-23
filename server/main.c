@@ -1,17 +1,17 @@
+#include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <unistd.h>
+
 #include "../common/constants.h"
 #include "../common/io.h"
+#include "common/op_code.h"
 #include "operations.h"
 #include "session.h"
-#include "common/op_code.h"
-
 
 static void cleanup(int fd) {
   char ch;
@@ -23,14 +23,14 @@ static void cleanup(int fd) {
 /// @param register_fifo pointer where pipe file descriptor will be written
 /// @param register_pipe_path path to pipe file
 /// @return 0 if sucessful, 1 otherwise
-int initialize_pipe(int * register_fifo, const char * register_pipe_path) {
+int initialize_pipe(int* register_fifo, const char* register_pipe_path) {
   // Remove pipe if it exists already
   if (unlink(register_pipe_path) && errno != ENOENT) {
     fprintf(stderr, "[ERR]: Failed to unlink %s: %s\n", register_pipe_path, strerror(errno));
     return 1;
   }
 
-  // Create pipe 
+  // Create pipe
   if (mkfifo(register_pipe_path, 0640)) {
     fprintf(stderr, "[ERR]: Failed to create register fifo %s: %s\n", register_pipe_path, strerror(errno));
     return 1;
@@ -46,7 +46,7 @@ int initialize_pipe(int * register_fifo, const char * register_pipe_path) {
     fprintf(stderr, "[ERR]: Failed to open register fifo \"%s\": %s\n", register_pipe_path, strerror(errno));
     return 1;
   }
-  
+
   return 0;
 }
 
@@ -54,8 +54,8 @@ int initialize_pipe(int * register_fifo, const char * register_pipe_path) {
 /// @param session Pointer to struct to store session data.
 /// @param register_fifo pipe file descriptor
 /// @return 0 if sucessful, 1 otherwise
-int initiate_session(session_t * session, int register_fifo) {
-  const size_t BUFFER_SIZE = 1 /* OP_CODE */ + 40*2 /* pipe_paths*/;
+int initiate_session(session_t* session, int register_fifo) {
+  const size_t BUFFER_SIZE = 1 /* OP_CODE */ + 40 * 2 /* pipe_paths*/;
   char buffer[BUFFER_SIZE];
   ssize_t ret = read(register_fifo, buffer, BUFFER_SIZE);
   if (ret == -1) {
@@ -63,7 +63,7 @@ int initiate_session(session_t * session, int register_fifo) {
     fprintf(stderr, "[ERR]: Failed to read register fifo: %s\n", strerror(errno));
     return 1;
   }
-  
+
   if (DEBUG_REGISTER) {
     printf("[DEBUG]: Register Fifo received %zdB\n", ret);
     for (int i = 0; i < (int)ret; ++i) {
@@ -72,11 +72,11 @@ int initiate_session(session_t * session, int register_fifo) {
     printf("\n");
   }
 
-  buffer[BUFFER_SIZE-1] = '\0';
-  buffer[BUFFER_SIZE-1-40] = '\0';
+  buffer[BUFFER_SIZE - 1] = '\0';
+  buffer[BUFFER_SIZE - 1 - 40] = '\0';
 
-  char * req_pipe_path = buffer+1;
-  char * resp_pipe_path = buffer+1+40;
+  char* req_pipe_path = buffer + 1;
+  char* resp_pipe_path = buffer + 1 + 40;
 
   if (DEBUG_REGISTER) {
     printf("[DEBUG]: Requests pipe: \"%s\", Response pipe: \"%s\"\n", req_pipe_path, resp_pipe_path);
@@ -109,7 +109,7 @@ int initiate_session(session_t * session, int register_fifo) {
     fprintf(stderr, "[ERR]: Failed to send setup response: %s\n", strerror(errno));
     return 1;
   }
-  
+
   if (DEBUG_IO) {
     printf("[DEBUG]: Initialized session\n");
   }
@@ -117,12 +117,11 @@ int initiate_session(session_t * session, int register_fifo) {
   return 0;
 }
 
-int parse_create(session_t * session) {
-  unsigned int event_id; 
+int parse_create(session_t* session) {
+  unsigned int event_id;
   size_t num_rows, num_cols;
 
-  if (read_uint(session->request_pipe, &event_id) ||
-      read_size(session->request_pipe, &num_rows) ||
+  if (read_uint(session->request_pipe, &event_id) || read_size(session->request_pipe, &num_rows) ||
       read_size(session->request_pipe, &num_cols)) {
     fprintf(stderr, "[ERR]: Failed to parse create operation\n");
     cleanup(session->request_pipe);
@@ -139,28 +138,27 @@ int parse_create(session_t * session) {
   return result;
 }
 
-int parse_reserve(session_t * session) {
+int parse_reserve(session_t* session) {
   unsigned int event_id;
   size_t num_seats;
   size_t Xs[MAX_RESERVATION_SIZE], Ys[MAX_RESERVATION_SIZE];
 
-  if (read_uint(session->request_pipe, &event_id) ||
-      read_size(session->request_pipe, &num_seats)) {
+  if (read_uint(session->request_pipe, &event_id) || read_size(session->request_pipe, &num_seats)) {
     fprintf(stderr, "[ERR]: Failed to parse create operation\n");
     cleanup(session->request_pipe);
     return 1;
   }
 
   for (size_t i = 0; i < num_seats; i++) {
-    if (read_size(session->request_pipe, Xs+i)) {
+    if (read_size(session->request_pipe, Xs + i)) {
       fprintf(stderr, "[ERR]: Failed to parse create operation\n");
       cleanup(session->request_pipe);
       return 1;
     }
   }
-  
+
   for (size_t i = 0; i < num_seats; i++) {
-    if (read_size(session->request_pipe, Ys+i)) {
+    if (read_size(session->request_pipe, Ys + i)) {
       fprintf(stderr, "[ERR]: Failed to parse create operation\n");
       cleanup(session->request_pipe);
       return 1;
@@ -174,8 +172,8 @@ int parse_reserve(session_t * session) {
   return 0;
 }
 
-int parse_show(session_t * session) {
-  unsigned int event_id; 
+int parse_show(session_t* session) {
+  unsigned int event_id;
 
   if (read_uint(session->request_pipe, &event_id)) {
     fprintf(stderr, "[ERR]: Failed to parse create operation\n");
@@ -186,32 +184,29 @@ int parse_show(session_t * session) {
   return ems_show(session->response_pipe, event_id);
 }
 
-
 /// @brief Parses and executes a single operation
 /// @param session pointer to current session
 /// @return -1 if operation was QUIT, 0 if operation sucessful, 1 otherwise;
-int parse_operation(session_t * session) {
-    char operation = '0';
+int parse_operation(session_t* session) {
+  char operation = '0';
 
-    ssize_t read_bytes = read(session->request_pipe, &operation, 1);
-    if (read_bytes == -1) {
-      fprintf(stderr, "[ERR]: Failed to read request\n");
-      return 1;
-    } else if (read_bytes == 0) {
-      // Finished reading
-      return 1;
-    }
+  ssize_t read_bytes = read(session->request_pipe, &operation, 1);
+  if (read_bytes == -1) {
+    fprintf(stderr, "[ERR]: Failed to read request\n");
+    return 1;
+  } else if (read_bytes == 0) {
+    // Finished reading
+    return 1;
+  }
 
-    unsigned int session_id;
-    read_uint(session->request_pipe, &session_id);
+  unsigned int session_id;
+  read_uint(session->request_pipe, &session_id);
 
-    if (DEBUG_REQUEST)
-      printf("[DEBUG]: Received operation %c in session %u\n", operation, session->id);
+  if (DEBUG_REQUEST) printf("[DEBUG]: Received operation %c in session %u\n", operation, session->id);
 
-    switch (operation) {
+  switch (operation) {
     case QUIT:
-      if (DEBUG)
-        printf("[DEBUG]: Quit session n.%d\n", session->id);
+      if (DEBUG) printf("[DEBUG]: Quit session n.%d\n", session->id);
       close(session->request_pipe);
       close(session->response_pipe);
       return -1;
@@ -231,8 +226,8 @@ int parse_operation(session_t * session) {
     default:
       fprintf(stderr, "[ERR]: Invalid operation\n");
       break;
-    }
-    return 0;
+  }
+  return 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -262,7 +257,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  //TODO: Intialize server, create worker threads
+  // TODO: Intialize server, create worker threads
 
   // Initialize pipe
   int register_fifo;
@@ -276,15 +271,16 @@ int main(int argc, char* argv[]) {
   }
 
   // Single Worker thread
-  while (parse_operation(&single_session) != -1);
+  while (parse_operation(&single_session) != -1)
+    ;
 
   // while (1) {
-    
+
   //   //TODO: Read from pipe
   //   //TODO: Write new client to the producer-consumer buffer
   // }
 
-  //TODO: Close Server
+  // TODO: Close Server
 
   // Close pipe
   close(register_fifo);

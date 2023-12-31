@@ -219,7 +219,6 @@ int ems_show(int out_fd, unsigned int event_id) {
     return 1;
   }
 
-
   pthread_mutex_unlock(&event->mutex);
   if (DEBUG_OP) {
     printf("[DEBUG]: Showed event %u\n", event_id);
