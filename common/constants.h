@@ -5,7 +5,8 @@
 
 // Character that defines separator between integers
 #define SEPARATOR_CHAR '|'
-#define MSG_SIZE 40
+#define MAX_PIPE_PATH_SIZE 40
+
 #define true 1
 #define false 0
 
@@ -17,3 +18,5 @@
 #define DEBUG_REQUEST DEBUG && true
 // Show I/O opening and closing
 #define DEBUG_IO DEBUG && true
+// Show server operations
+#define DEBUG_OP DEBUG && true

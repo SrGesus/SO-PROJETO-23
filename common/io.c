@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
+
 
 int parse_uint(int fd, unsigned int *value, char *next) {
   char buf[16];
@@ -78,8 +80,75 @@ int print_str(int fd, const char *str) {
   return 0;
 }
 
+int write_uint(int fd, unsigned int value) {
+  const size_t BUFFER_SIZE = sizeof(unsigned int);
+  char buffer[BUFFER_SIZE];
+  memcpy(buffer, &value, BUFFER_SIZE);
+  size_t i = 0;
+  while (i < BUFFER_SIZE) {
+    ssize_t written = write(fd, buffer+i, BUFFER_SIZE-i);
+    if (written == -1) {
+      return 1;
+    }
+    i += (size_t)written;
+  }
+  return 0;
+}
 
-int print_nstr(int fd, size_t len, const char *str) {
+int write_size(int fd, size_t value) {
+  const size_t BUFFER_SIZE = sizeof(size_t);
+  char buffer[BUFFER_SIZE];
+  memcpy(buffer, &value, BUFFER_SIZE);
+  size_t i = 0;
+  while (i < BUFFER_SIZE) {
+    ssize_t written = write(fd, buffer+i, BUFFER_SIZE-i);
+    if (written == -1) {
+      return 1;
+    }
+    i += (size_t)written;
+  }
+  return 0;
+}
+
+int read_uint(int fd, unsigned int * value) {
+  const size_t BUFFER_SIZE = sizeof(unsigned int);
+  char buffer[BUFFER_SIZE];
+
+  size_t i = 0;
+  while (i < BUFFER_SIZE) {
+    ssize_t n = read(fd, buffer+i, BUFFER_SIZE-i);
+    if (n == -1) {
+      return 1;
+    }
+    i += (size_t)n;
+  }
+  
+  memcpy(value, buffer, BUFFER_SIZE);
+  
+  printf("Read: %u\n", *value);
+
+  return 0;
+}
+int read_size(int fd, size_t * value) {
+  const size_t BUFFER_SIZE = sizeof(size_t);
+  char buffer[BUFFER_SIZE];
+
+  size_t i = 0;
+  while (i < BUFFER_SIZE) {
+    ssize_t n = read(fd, buffer+i, BUFFER_SIZE-i);
+    if (n == -1) {
+      return 1;
+    }
+    i += (size_t)n;
+  }
+  memcpy(value, buffer, BUFFER_SIZE);
+  
+  printf("Read: %lu\n", *value);
+
+  return 0;
+}
+
+int write_nstr(int fd, size_t len, const char *str) {
   while (len > 0) {
     ssize_t written = write(fd, str, len);
     if (written == -1) {

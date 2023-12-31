@@ -109,12 +109,12 @@ int initiate_session(session_t * session, int register_fifo) {
 }
 
 int parse_create(session_t * session) {
-  char next;
-  unsigned int event_id, num_rows, num_cols;
+  unsigned int event_id; 
+  size_t num_rows, num_cols;
 
-  if (parse_uint(session->request_pipe, &event_id, &next) || next != SEPARATOR_CHAR ||
-      parse_uint(session->request_pipe, &num_rows, &next) || next != SEPARATOR_CHAR ||
-      parse_uint(session->request_pipe, &num_cols, &next)) {
+  if (read_uint(session->request_pipe, &event_id) ||
+      read_size(session->request_pipe, &num_rows) ||
+      read_size(session->request_pipe, &num_cols)) {
     fprintf(stderr, "[ERR]: Failed to parse create operation\n");
     cleanup(session->request_pipe);
     return 1;
@@ -128,27 +128,27 @@ int parse_create(session_t * session) {
 }
 
 int parse_reserve(session_t * session) {
-  char next;
-  unsigned int event_id, num_seats;
-  unsigned int Xs[MAX_RESERVATION_SIZE], Ys[MAX_RESERVATION_SIZE];
+  unsigned int event_id;
+  size_t num_seats;
+  size_t Xs[MAX_RESERVATION_SIZE], Ys[MAX_RESERVATION_SIZE];
 
-  if (parse_uint(session->request_pipe, &event_id, &next) || next != SEPARATOR_CHAR ||
-      parse_uint(session->request_pipe, &num_seats, &next)) {
+  if (read_uint(session->request_pipe, &event_id) ||
+      read_size(session->request_pipe, &num_seats)) {
     fprintf(stderr, "[ERR]: Failed to parse create operation\n");
     cleanup(session->request_pipe);
     return 1;
   }
 
-  for (int i = 0; i < num_seats; i++) {
-    if (parse_uint(session->request_pipe, Xs+i, &next) || next != SEPARATOR_CHAR) {
+  for (size_t i = 0; i < num_seats; i++) {
+    if (read_size(session->request_pipe, Xs+i)) {
       fprintf(stderr, "[ERR]: Failed to parse create operation\n");
       cleanup(session->request_pipe);
       return 1;
     }
   }
   
-  for (int i = 0; i < num_seats; i++) {
-    if (parse_uint(session->request_pipe, Ys+i, &next) || next != SEPARATOR_CHAR) {
+  for (size_t i = 0; i < num_seats; i++) {
+    if (read_size(session->request_pipe, Ys+i)) {
       fprintf(stderr, "[ERR]: Failed to parse create operation\n");
       cleanup(session->request_pipe);
       return 1;
@@ -188,8 +188,7 @@ int parse_operation(session_t * session) {
     }
 
     unsigned int session_id;
-    char _i;
-    parse_uint(session->request_pipe, &session_id, &_i);
+    read_uint(session->request_pipe, &session_id);
 
     if (DEBUG_REQUEST)
       printf("[DEBUG]: Received operation %c in session %u\n", operation, session_id);

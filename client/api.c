@@ -9,17 +9,22 @@
 #include <stdlib.h>
 #include "../common/io.h"
 #include "../common/constants.h"
-int req_pipe, resp_pipe;
-int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const* server_pipe_path) {
-  int server_pipe;
-  char msg[1 + MSG_SIZE + MSG_SIZE];
-  int req_pipe_path_size = strlen(req_pipe_path), resp_pipe_path_size = strlen(resp_pipe_path);
+#include <sys/types.h>
+#include <sys/stat.h>
 
+int req_pipe, resp_pipe;
+
+int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const* server_pipe_path) {
+  const size_t BUFFER_SIZE = 1 + 2 * MAX_PIPE_PATH_SIZE;
+  char msg[BUFFER_SIZE];
+  int server_pipe;
+  size_t req_pipe_path_size = strlen(req_pipe_path);
+  size_t resp_pipe_path_size = strlen(resp_pipe_path);
   msg[0] = '1';
+
+  memset(msg + 1, '\0', BUFFER_SIZE - 1);
   strcpy(msg + 1, req_pipe_path);
-  memset(msg + 1 + req_pipe_path_size, '\0', MSG_SIZE - req_pipe_path_size);
-  strcpy(msg + 1 + MSG_SIZE, resp_pipe_path);
-  memset(msg + 1 + MSG_SIZE + resp_pipe_path_size, '\0', MSG_SIZE - resp_pipe_path_size);
+  strcpy(msg + 1 + MAX_PIPE_PATH_SIZE, resp_pipe_path);
 
   if((server_pipe = open(server_pipe_path, O_RDWR)) < 0){
     fprintf(stderr, "[ERR]: Failed to open server pipe %s: %s\n",server_pipe_path,strerror(errno));
@@ -41,7 +46,7 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
     fprintf(stderr, "[ERR]: Failed to create resp_pipe %s: %s\n", resp_pipe_path, strerror(errno));
     return 1;
   }
-  if (print_nstr(server_pipe,1+MSG_SIZE+MSG_SIZE,msg)){
+  if (write_nstr(server_pipe, BUFFER_SIZE,msg)){
     fprintf(stderr, "[ERR]: Failed to write msg %s: %s\n", msg, strerror(errno));
     return 1;
   }
@@ -77,7 +82,7 @@ int ems_show(int out_fd, unsigned int event_id) {
   int event_id_size = snprintf(NULL,0,"%u",event_id);
   char * msg = malloc(sizeof(char)*(event_id_size+3));
   msg[0] = '5';
-  msg[1] = '|';
+  msg[1] = '|'; // TODO no longer using separators
   sprintf(msg + 2,"%u",event_id);
   printf("%s\n",msg);
 

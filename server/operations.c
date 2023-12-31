@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "common/io.h"
+#include "common/constants.h"
 #include "eventlist.h"
 
 static struct EventList* event_list = NULL;
@@ -111,10 +112,16 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
   }
 
   pthread_rwlock_unlock(&event_list->rwl);
+
+  if (DEBUG_OP) {
+    printf("[DEBUG]: Created event %u: Rows: %lu, Cols: %lu\n", event_id, num_rows, num_cols);
+  }
+
   return 0;
 }
 
 int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys) {
+
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
     return 1;
@@ -174,6 +181,7 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
 }
 
 int ems_show(int out_fd, unsigned int event_id) {
+  unsigned int reservation[];
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
     return 1;
