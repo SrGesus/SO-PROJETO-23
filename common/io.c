@@ -95,6 +95,21 @@ int write_uint(int fd, unsigned int value) {
   return 0;
 }
 
+int write_int(int fd, int value) {
+  const size_t BUFFER_SIZE = sizeof(int);
+  char buffer[BUFFER_SIZE];
+  memcpy(buffer, &value, BUFFER_SIZE);
+  size_t i = 0;
+  while (i < BUFFER_SIZE) {
+    ssize_t written = write(fd, buffer+i, BUFFER_SIZE-i);
+    if (written == -1) {
+      return 1;
+    }
+    i += (size_t)written;
+  }
+  return 0;
+}
+
 int write_size(int fd, size_t value) {
   const size_t BUFFER_SIZE = sizeof(size_t);
   char buffer[BUFFER_SIZE];
@@ -116,11 +131,11 @@ int read_uint(int fd, unsigned int * value) {
 
   size_t i = 0;
   while (i < BUFFER_SIZE) {
-    ssize_t n = read(fd, buffer+i, BUFFER_SIZE-i);
-    if (n == -1) {
+    ssize_t read_bytes = read(fd, buffer+i, BUFFER_SIZE-i);
+    if (read_bytes == -1) {
       return 1;
     }
-    i += (size_t)n;
+    i += (size_t)read_bytes;
   }
   
   memcpy(value, buffer, BUFFER_SIZE);
@@ -129,6 +144,26 @@ int read_uint(int fd, unsigned int * value) {
 
   return 0;
 }
+int read_int(int fd, int * value) {
+  const size_t BUFFER_SIZE = sizeof(int);
+  char buffer[BUFFER_SIZE];
+
+  size_t i = 0;
+  while (i < BUFFER_SIZE) {
+    ssize_t read_bytes = read(fd, buffer+i, BUFFER_SIZE-i);
+    if (read_bytes == -1) {
+      return 1;
+    }
+    i += (size_t)read_bytes;
+  }
+  
+  memcpy(value, buffer, BUFFER_SIZE);
+  
+  printf("Read: %u\n", *value);
+
+  return 0;
+}
+
 int read_size(int fd, size_t * value) {
   const size_t BUFFER_SIZE = sizeof(size_t);
   char buffer[BUFFER_SIZE];

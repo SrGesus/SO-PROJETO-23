@@ -35,6 +35,12 @@ int write_nstr(int fd, size_t len, const char *str);
 /// @return 0 if the integer was read successfully, 1 otherwise.
 int write_uint(int fd, unsigned int value);
 
+/// Writes an integer to the given file descriptor.
+/// @param fd The file descriptor to write to.
+/// @param value Value to be written
+/// @return 0 if the integer was read successfully, 1 otherwise.
+int write_int(int fd, int value);
+
 /// Reads an unsigned integer from the given file descriptor.
 /// @param fd The file descriptor to read from.
 /// @param value Pointer to the variable to store the value in.
