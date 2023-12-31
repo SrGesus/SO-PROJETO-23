@@ -5,7 +5,7 @@
 
 // Character that defines separator between integers
 #define SEPARATOR_CHAR '|'
-
+#define MSG_SIZE 40
 #define true 1
 #define false 0
 

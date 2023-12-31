@@ -161,6 +161,16 @@ int parse_reserve(session_t * session) {
 
   return 0;
 }
+int parse_show(session_t * session){
+  char next;
+  unsigned int event_id;
+  if (parse_uint(session->request_pipe,&event_id,&next)){
+    fprintf(stderr, "[ERR]: Failed to parse show operation\n");
+    cleanup(session->request_pipe);
+    return 1;
+  }
+  printf("%u\n",event_id);
+}
 
 /// @brief Parses and executes a single operation
 /// @param session pointer to current session
@@ -195,10 +205,9 @@ int parse_operation(session_t * session) {
       return parse_reserve(session);
       break;
     case SHOW:
-
+      return parse_show(session);
       break;
     case LIST:
-
       break;
     default:
       fprintf(stderr, "[ERR]: Invalid operation\n");
