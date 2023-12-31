@@ -2,9 +2,9 @@
 #define SERVER_SESSION_H
 
 typedef struct {
-    unsigned int id;
-    int request_pipe;
-    int response_pipe;
+  unsigned int id;
+  int request_pipe;
+  int response_pipe;
 } session_t;
 
-#endif // SERVER_SESSION_H
+#endif  // SERVER_SESSION_H

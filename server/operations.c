@@ -4,8 +4,8 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "common/io.h"
 #include "common/constants.h"
+#include "common/io.h"
 #include "eventlist.h"
 
 static struct EventList* event_list = NULL;
@@ -121,7 +121,6 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
 }
 
 int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys) {
-
   if (event_list == NULL) {
     fprintf(stderr, "EMS state must be initialized\n");
     return 1;
@@ -196,7 +195,7 @@ int ems_show(int out_fd, unsigned int event_id) {
   struct Event* event = get_event_with_delay(event_id, event_list->head, event_list->tail);
 
   pthread_rwlock_unlock(&event_list->rwl);
-  
+
   if (event == NULL) {
     fprintf(stderr, "Event not found\n");
     write_int(out_fd, 1);
@@ -209,10 +208,8 @@ int ems_show(int out_fd, unsigned int event_id) {
     return 1;
   }
 
-  if (write_int(out_fd, 0) ||
-    write_size(out_fd, event->rows) ||
-    write_size(out_fd, event->cols) ||
-    write_nstr(out_fd, sizeof(unsigned int)*event->rows*event->cols, event->data)) {
+  if (write_int(out_fd, 0) || write_size(out_fd, event->rows) || write_size(out_fd, event->cols) ||
+      write_nstr(out_fd, sizeof(unsigned int) * event->rows * event->cols, event->data)) {
     perror("Error writing to file descriptor");
     pthread_mutex_unlock(&event->mutex);
     return 1;
@@ -261,22 +258,22 @@ int ems_list_events(int out_fd) {
     }
     current = current->next;
   }
-  
+
   to = event_list->tail;
   current = event_list->head;
 
-  unsigned int * buffer = malloc(sizeof(unsigned int)*length);
+  unsigned int* buffer = malloc(sizeof(unsigned int) * length);
 
   for (size_t i; i < length; i++, current->next) {
     buffer[i] = current->event->id;
   }
 
-  if (write_nstr(out_fd, length*sizeof(unsigned int), buffer)) {
+  if (write_nstr(out_fd, length * sizeof(unsigned int), buffer)) {
     perror("Error writing to file descriptor");
     pthread_rwlock_unlock(&event_list->rwl);
     return 1;
   }
-  
+
   pthread_rwlock_unlock(&event_list->rwl);
   return 0;
 }

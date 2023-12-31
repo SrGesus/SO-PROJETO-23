@@ -1,11 +1,10 @@
 #include "io.h"
 
 #include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdio.h>
-
 
 int parse_uint(int fd, unsigned int *value, char *next) {
   char buf[16];
@@ -86,7 +85,7 @@ int write_uint(int fd, unsigned int value) {
   memcpy(buffer, &value, BUFFER_SIZE);
   size_t i = 0;
   while (i < BUFFER_SIZE) {
-    ssize_t written = write(fd, buffer+i, BUFFER_SIZE-i);
+    ssize_t written = write(fd, buffer + i, BUFFER_SIZE - i);
     if (written == -1) {
       return 1;
     }
@@ -101,7 +100,7 @@ int write_int(int fd, int value) {
   memcpy(buffer, &value, BUFFER_SIZE);
   size_t i = 0;
   while (i < BUFFER_SIZE) {
-    ssize_t written = write(fd, buffer+i, BUFFER_SIZE-i);
+    ssize_t written = write(fd, buffer + i, BUFFER_SIZE - i);
     if (written == -1) {
       return 1;
     }
@@ -116,7 +115,7 @@ int write_size(int fd, size_t value) {
   memcpy(buffer, &value, BUFFER_SIZE);
   size_t i = 0;
   while (i < BUFFER_SIZE) {
-    ssize_t written = write(fd, buffer+i, BUFFER_SIZE-i);
+    ssize_t written = write(fd, buffer + i, BUFFER_SIZE - i);
     if (written == -1) {
       return 1;
     }
@@ -125,60 +124,60 @@ int write_size(int fd, size_t value) {
   return 0;
 }
 
-int read_uint(int fd, unsigned int * value) {
+int read_uint(int fd, unsigned int *value) {
   const size_t BUFFER_SIZE = sizeof(unsigned int);
   char buffer[BUFFER_SIZE];
 
   size_t i = 0;
   while (i < BUFFER_SIZE) {
-    ssize_t read_bytes = read(fd, buffer+i, BUFFER_SIZE-i);
+    ssize_t read_bytes = read(fd, buffer + i, BUFFER_SIZE - i);
     if (read_bytes == -1) {
       return 1;
     }
     i += (size_t)read_bytes;
   }
-  
+
   memcpy(value, buffer, BUFFER_SIZE);
-  
-  //printf("Read: %u\n", *value);
+
+  // printf("Read: %u\n", *value);
 
   return 0;
 }
-int read_int(int fd, int * value) {
+int read_int(int fd, int *value) {
   const size_t BUFFER_SIZE = sizeof(int);
   char buffer[BUFFER_SIZE];
 
   size_t i = 0;
   while (i < BUFFER_SIZE) {
-    ssize_t read_bytes = read(fd, buffer+i, BUFFER_SIZE-i);
+    ssize_t read_bytes = read(fd, buffer + i, BUFFER_SIZE - i);
     if (read_bytes == -1) {
       return 1;
     }
     i += (size_t)read_bytes;
   }
-  
+
   memcpy(value, buffer, BUFFER_SIZE);
-  
+
   printf("Read: %u\n", *value);
 
   return 0;
 }
 
-int read_size(int fd, size_t * value) {
+int read_size(int fd, size_t *value) {
   const size_t BUFFER_SIZE = sizeof(size_t);
   char buffer[BUFFER_SIZE];
 
   size_t i = 0;
   while (i < BUFFER_SIZE) {
-    ssize_t n = read(fd, buffer+i, BUFFER_SIZE-i);
+    ssize_t n = read(fd, buffer + i, BUFFER_SIZE - i);
     if (n == -1) {
       return 1;
     }
     i += (size_t)n;
   }
   memcpy(value, buffer, BUFFER_SIZE);
-  
-  //printf("Read: %lu\n", *value);
+
+  // printf("Read: %lu\n", *value);
 
   return 0;
 }
