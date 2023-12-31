@@ -104,7 +104,12 @@ int initiate_session(session_t * session, int register_fifo) {
 
   session->request_pipe = req_pipe;
   session->response_pipe = resp_pipe;
-
+  session->id = 0; //SINGLE_THREADED
+  if (write_uint(resp_pipe,session->id)){
+    fprintf(stderr, "[ERR]: Failed to write in response pipe \"%u\": %s\n", session->id, strerror(errno));
+    return 1;
+  }
+  
   return 0;
 }
 
@@ -162,14 +167,14 @@ int parse_reserve(session_t * session) {
   return 0;
 }
 int parse_show(session_t * session){
-  char next;
+  //char next;
   unsigned int event_id;
-  if (parse_uint(session->request_pipe,&event_id,&next)){
+  if (read_uint(session->request_pipe,&event_id)){
     fprintf(stderr, "[ERR]: Failed to parse show operation\n");
     cleanup(session->request_pipe);
     return 1;
   }
-  printf("%u\n",event_id);
+  return 0;
 }
 
 /// @brief Parses and executes a single operation
@@ -187,11 +192,11 @@ int parse_operation(session_t * session) {
       return 0;
     }
 
-    unsigned int session_id;
-    read_uint(session->request_pipe, &session_id);
+    // unsigned int session_id;
+    // read_uint(session->request_pipe, &session_id);
 
     if (DEBUG_REQUEST)
-      printf("[DEBUG]: Received operation %c in session %u\n", operation, session_id);
+      printf("[DEBUG]: Received operation %c in session %u\n", operation, session->id);
 
     switch (operation) {
     case QUIT:

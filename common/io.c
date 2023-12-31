@@ -125,7 +125,7 @@ int read_uint(int fd, unsigned int * value) {
   
   memcpy(value, buffer, BUFFER_SIZE);
   
-  printf("Read: %u\n", *value);
+  //printf("Read: %u\n", *value);
 
   return 0;
 }
@@ -143,7 +143,7 @@ int read_size(int fd, size_t * value) {
   }
   memcpy(value, buffer, BUFFER_SIZE);
   
-  printf("Read: %lu\n", *value);
+  //printf("Read: %lu\n", *value);
 
   return 0;
 }
