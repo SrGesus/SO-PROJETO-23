@@ -16,22 +16,20 @@ int initialize_pipe(int* register_fifo, const char* register_pipe_path);
 /// @return 0 if sucessful, 1 otherwise
 int initiate_session(session_t* session, int register_fifo);
 
-/// @brief 
+/// @brief Parses and runs create operation.
 /// @param session 
-/// @return 
+/// @return 0 if sucessful, 1 otherwise
 int parse_create(session_t* session);
 
-/// @brief 
+/// @brief Parses and runs reserve operation.
 /// @param session 
-/// @return 
+/// @return 0 if sucessful, 1 otherwise
 int parse_reserve(session_t* session);
 
-/// @brief 
+/// @brief Parses and runs show operation.
 /// @param session 
-/// @return 
+/// @return 0 if sucessful, 1 otherwise
 int parse_show(session_t* session);
-
-
 
 /// @brief Parses and executes a single operation
 /// @param session pointer to current session

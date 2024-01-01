@@ -97,15 +97,6 @@ int initiate_session(session_t* session, int register_fifo) {
   session->request_pipe = req_pipe;
   session->response_pipe = resp_pipe;
 
-  if (write_uint(session->response_pipe, 0)) {
-    fprintf(stderr, "[ERR]: Failed to send setup response: %s\n", strerror(errno));
-    return 1;
-  }
-
-  if (DEBUG_IO) {
-    printf("[DEBUG]: Initialized session\n");
-  }
-
   return 0;
 }
 

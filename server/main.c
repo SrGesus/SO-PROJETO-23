@@ -7,12 +7,29 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <pthread.h>
 #include "common/constants.h"
 #include "common/io.h"
 #include "common/op_code.h"
 #include "server/session.h"
 #include "server/parser.h"
 #include "server/operations.h"
+
+void * worker_thread(void *arg) {
+  size_t session_id = (size_t)arg;
+  session_t session;
+  while (1) {
+    // TODO: Read session from producer-consumer buffer
+
+    if (write_uint(session.response_pipe, session_id)) {
+      fprintf(stderr, "[ERR]: Failed to send setup response: %s\n", strerror(errno));
+      return 1;
+    }
+
+    while (parse_operation(&session) != -1)
+      ;
+  }
+}
 
 int main(int argc, char* argv[]) {
   // Check arg count
@@ -49,25 +66,27 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  session_t single_session;
-  if (initiate_session(&single_session, register_fifo)) {
-    return 1;
+  // TODO: Initialize producer-consumer buffer
+
+  pthread_t threads[MAX_SESSION_COUNT];
+
+  for (size_t i; i < MAX_SESSION_COUNT; i++) {
+    pthread_create(threads+i, NULL, worker_thread, (void *)i /* TODO: talvez tmb producer consumer buffer*/);
   }
 
-  // Single Worker thread
-  while (parse_operation(&single_session) != -1)
-    ;
+  session_t session;
+  while (1) {
+    // Read from pipe
+    if (initiate_session(&session, register_fifo))
+      return 1;
+    // TODO: Write session into producer-consumer buffer
+  }
 
-  // while (1) {
-
-  //   //TODO: Read from pipe
-  //   //TODO: Write new client to the producer-consumer buffer
-  // }
-
-  // TODO: Close Server
+  // TODO: Destroy producer consumer buffer
 
   // Close pipe
   close(register_fifo);
 
   ems_terminate();
 }
+
