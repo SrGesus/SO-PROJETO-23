@@ -15,12 +15,6 @@
 #include "common/io.h"
 #include "common/op_code.h"
 
-static void cleanup(int fd) {
-  char ch;
-  while (read(fd, &ch, 1) == 1 && ch != '\n')
-    ;
-}
-
 int req_pipe, resp_pipe;
 unsigned int session_id;
 
