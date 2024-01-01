@@ -22,12 +22,19 @@ int print_uint(int fd, unsigned int value);
 /// @return 0 if the string was written successfully, 1 otherwise.
 int print_str(int fd, const char *str);
 
-/// Writes a n chars to the given file descriptor.
+/// Writes n bytes to the given file descriptor.
 /// @param fd The file descriptor to write to.
-/// @param len Count of bytes to write.
 /// @param buf The buffer to write
+/// @param len Count of bytes to write.
 /// @return 0 if the string was written successfully, 1 otherwise.
-int write_nstr(int fd, size_t len, void *buf);
+int write_nbytes(int fd, void *buf, size_t len);
+
+/// Writes n bytes to the given file descriptor.
+/// @param fd The file descriptor to write to.
+/// @param buf The buffer to write
+/// @param len Count of bytes to write.
+/// @return 0 if the string was written successfully, 1 otherwise.
+int read_nbytes(int fd, void *buf, size_t len);
 
 /// Writes an unsigned integer to the given file descriptor.
 /// @param fd The file descriptor to write to.

@@ -169,11 +169,11 @@ int read_size(int fd, size_t *value) {
 
   size_t i = 0;
   while (i < BUFFER_SIZE) {
-    ssize_t n = read(fd, buffer + i, BUFFER_SIZE - i);
-    if (n == -1) {
+    ssize_t read_bytes = read(fd, buffer + i, BUFFER_SIZE - i);
+    if (read_bytes == -1) {
       return 1;
     }
-    i += (size_t)n;
+    i += (size_t)read_bytes;
   }
   memcpy(value, buffer, BUFFER_SIZE);
 
@@ -182,7 +182,7 @@ int read_size(int fd, size_t *value) {
   return 0;
 }
 
-int write_nstr(int fd, size_t len, void *buf) {
+int write_nbytes(int fd, void *buf, size_t len) {
   while (len > 0) {
     ssize_t written = write(fd, buf, len);
     if (written == -1) {
@@ -191,6 +191,19 @@ int write_nstr(int fd, size_t len, void *buf) {
 
     buf += (size_t)written;
     len -= (size_t)written;
+  }
+
+  return 0;
+}
+
+int read_nbytes(int fd, void *buf, size_t len) {
+  size_t i = 0;
+  while (i < len) {
+    ssize_t read_bytes = read(fd, buf + i, len - i);
+    if (read_bytes == -1) {
+      return 1;
+    }
+    i += (size_t)read_bytes;
   }
 
   return 0;

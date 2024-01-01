@@ -213,7 +213,7 @@ int ems_show(int out_fd, unsigned int event_id) {
   }
 
   if (write_int(out_fd, 0) || write_size(out_fd, event->rows) || write_size(out_fd, event->cols) ||
-      write_nstr(out_fd, sizeof(unsigned int) * event->rows * event->cols, event->data)) {
+      write_nbytes(out_fd, event->data, sizeof(unsigned int) * event->rows * event->cols)) {
     perror("Error writing to file descriptor");
     pthread_mutex_unlock(&event->mutex);
     return 1;
@@ -275,7 +275,7 @@ int ems_list_events(int out_fd) {
     current = current->next;
   }
 
-  if (write_nstr(out_fd, length * sizeof(unsigned int), buffer)) {
+  if (write_nbytes(out_fd, buffer, length * sizeof(unsigned int))) {
     perror("Error writing to file descriptor");
     pthread_rwlock_unlock(&event_list->rwl);
     return 1;

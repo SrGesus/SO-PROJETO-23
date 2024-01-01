@@ -55,7 +55,7 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
     return 1;
   }
 
-  if (write_nstr(server_pipe, BUFFER_SIZE, msg)) {
+  if (write_nbytes(server_pipe, msg, BUFFER_SIZE)) {
     fprintf(stderr, "[ERR]: Failed to write msg %s: %s\n", msg, strerror(errno));
     return 1;
   }
@@ -72,13 +72,12 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
     fprintf(stderr, "[ERR]: Failed to read from resp_pipe: %s\n", strerror(errno));
     return 1;
   }
-  // TODO: create pipes and connect to the server
   return 0;
 }
 
 int ems_quit(void) {
   char msg = QUIT;
-  if (write_nstr(req_pipe, 1, &msg)) {
+  if (write_nbytes(req_pipe, &msg, sizeof(char))) {
     fprintf(stderr, "[ERR]: Failed to write op_code %c: %s\n", msg, strerror(errno));
     return 1;
   }
@@ -91,7 +90,7 @@ int ems_quit(void) {
 
 int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
   char msg = CREATE;
-  if (write_nstr(req_pipe, 1, &msg)) {
+  if (write_nbytes(req_pipe, &msg, sizeof(char))) {
     fprintf(stderr, "[ERR]: Failed to write op_code %c: %s\n", msg, strerror(errno));
     return 1;
   }
@@ -121,7 +120,7 @@ int ems_create(unsigned int event_id, size_t num_rows, size_t num_cols) {
 
 int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys) {
   char msg = RESERVE;
-  if (write_nstr(req_pipe, 1, &msg)) {
+  if (write_nbytes(req_pipe, &msg, sizeof(char))) {
     fprintf(stderr, "[ERR]: Failed to write op_code %c: %s\n", msg, strerror(errno));
     return 1;
   }
@@ -137,11 +136,11 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
     fprintf(stderr, "[ERR]: Failed to write num_rows: %s\n", strerror(errno));
     return 1;
   }
-  if (write_nstr(req_pipe, sizeof(size_t) * num_seats, xs)) {
+  if (write_nbytes(req_pipe, xs, sizeof(size_t) * num_seats)) {
     fprintf(stderr, "[ERR]: Failed to write X seat: %s\n", strerror(errno));
     return 1;
   }
-  if (write_nstr(req_pipe, sizeof(size_t) * num_seats, ys)) {
+  if (write_nbytes(req_pipe, ys, sizeof(size_t) * num_seats)) {
     fprintf(stderr, "[ERR]: Failed to write Y seat: %s\n", strerror(errno));
     return 1;
   }
@@ -154,14 +153,9 @@ int ems_reserve(unsigned int event_id, size_t num_seats, size_t* xs, size_t* ys)
 }
 
 int ems_show(int out_fd, unsigned int event_id) {
-  // printf("%u\n",event_id);
   char msg = SHOW;
-  // char * msg = malloc(sizeof(char)*(event_id_size+3));
-  // msg[0] = '5';
-  // msg[1] = '|'; // TODO no longer using separators
-  // sprintf(msg + 1,"%u",event_id);
 
-  if (write_nstr(req_pipe, 1, &msg)) {
+  if (write_nbytes(req_pipe, &msg, sizeof(char))) {
     fprintf(stderr, "[ERR]: Failed to write op_code %c: %s\n", msg, strerror(errno));
     return 1;
   }
@@ -180,16 +174,48 @@ int ems_show(int out_fd, unsigned int event_id) {
   }
   if (result) return result;
 
-  // TO-DO read response
+  size_t num_rows, num_cols;
+  if (read_size(resp_pipe, &num_rows) ||
+      read_size(resp_pipe, &num_cols)) {
+    fprintf(stderr, "[ERR]: Failed to read response: %s\n", strerror(errno));
+    return 1;
+  }
 
-  cleanup(resp_pipe);
+  for (size_t i = 1; i <= num_rows; i++) {
+    for (size_t j = 1; j <= num_cols; j++) {
+      char buffer[16];
+      unsigned int seat;
+      if (read_uint(resp_pipe, &seat)) {
+        perror("Error reading from response pipe");
+        return 1;
+      }
+      sprintf(buffer, "%u", seat);
+
+      if (print_str(out_fd, buffer)) {
+        perror("Error writing to file descriptor");
+        return 1;
+      }
+
+      if (j < num_cols) {
+        if (print_str(out_fd, " ")) {
+          perror("Error writing to file descriptor");
+          return 1;
+        }
+      }
+    }
+
+    if (print_str(out_fd, "\n")) {
+      perror("Error writing to file descriptor");
+      return 1;
+    }
+  }
 
   return result;
 }
 
 int ems_list_events(int out_fd) {
   char msg = LIST;
-  if (write_nstr(req_pipe, 1, &msg)) {
+  if (write_nbytes(req_pipe, &msg, sizeof(char))) {
     fprintf(stderr, "[ERR]: Failed to write op_code %c: %s\n", msg, strerror(errno));
     return 1;
   }
@@ -204,9 +230,31 @@ int ems_list_events(int out_fd) {
   }
   if (result) return result;
 
-  // TO-DO read response
+  size_t num_events;
+  if (read_size(resp_pipe, &num_events)) {
+    fprintf(stderr, "[ERR]: Failed to read response: %s\n", strerror(errno));
+    return 1;
+  }
 
-  cleanup(resp_pipe);
+  for (size_t i = 0; i < num_events; i++) {
+    char buff[] = "Event: ";
+    if (print_str(out_fd, buff)) {
+      perror("Error writing to file descriptor");
+      return 1;
+    }
+
+    char buffer[16];
+    unsigned int id;
+    if (read_uint(resp_pipe, &id)) {
+      perror("Error reading from response pipe");
+      return 1;
+    }
+    sprintf(buffer, "%u\n", id);
+    if (print_str(out_fd, buffer)) {
+      perror("Error writing to file descriptor");
+      return 1;
+    }
+  }
 
   return result;
 }
