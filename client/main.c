@@ -5,7 +5,7 @@
 
 #include "api.h"
 #include "common/constants.h"
-#include "parser.h"
+#include "client/parser.h"
 
 int main(int argc, char* argv[]) {
   if (argc != 5) {
