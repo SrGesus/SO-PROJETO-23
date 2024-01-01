@@ -275,9 +275,13 @@ int ems_list_events(int out_fd) {
     current = current->next;
   }
 
+  write_int(out_fd, 0);
+  write_size(out_fd, length);
+
   if (write_nbytes(out_fd, buffer, length * sizeof(unsigned int))) {
     perror("Error writing to file descriptor");
     pthread_rwlock_unlock(&event_list->rwl);
+    free(buffer);
     return 1;
   }
 
@@ -285,6 +289,8 @@ int ems_list_events(int out_fd) {
     printf("[DEBUG]: Listed %lu events\n", length);
   }
 
+  free(buffer);
   pthread_rwlock_unlock(&event_list->rwl);
+
   return 0;
 }
