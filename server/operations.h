@@ -1,5 +1,5 @@
-#ifndef SERVER_OPERATIONS_H
-#define SERVER_OPERATIONS_H
+#ifndef OPERATIONS_H
+#define OPERATIONS_H
 
 #include <stddef.h>
 
@@ -37,4 +37,6 @@ int ems_show(int out_fd, unsigned int event_id);
 /// @return 0 if the events were printed successfully, 1 otherwise.
 int ems_list_events(int out_fd);
 
-#endif  // SERVER_OPERATIONS_H
+int ems_list_every(int out_fd);
+
+#endif // OPERATIONS_H

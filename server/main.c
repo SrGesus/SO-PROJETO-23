@@ -6,8 +6,9 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
+#include <signal.h>
 #include <pthread.h>
+
 #include "common/constants.h"
 #include "common/io.h"
 #include "common/op_code.h"
@@ -15,20 +16,34 @@
 #include "server/parser.h"
 #include "server/operations.h"
 
+int sigusr1_triggered = false;
+
+static void sig_handler(int) {
+  sigusr1_triggered = true;
+}
 void * worker_thread(void *arg) {
-  size_t session_id = (size_t)arg;
+  unsigned int session_id = (unsigned int)(intptr_t)arg;
   session_t session;
+  sigset_t set;
+  sigemptyset(&set);
+  sigaddset(&set, SIGUSR1);
+  if (pthread_sigmask(SIG_BLOCK, &set, NULL)) {
+    fprintf(stderr, "[ERR]: Failed to block signal\n");
+    return (void *)1;
+  }
+
   while (1) {
     // TODO: Read session from producer-consumer buffer
 
     if (write_uint(session.response_pipe, session_id)) {
       fprintf(stderr, "[ERR]: Failed to send setup response: %s\n", strerror(errno));
-      return 1;
+      break;
     }
 
     while (parse_operation(&session) != -1)
       ;
   }
+  return (void *)0;
 }
 
 int main(int argc, char* argv[]) {
@@ -58,6 +73,11 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  if (signal(SIGUSR1, sig_handler) == SIG_ERR) {
+    fprintf(stderr, "[ERR]: Failed to set signal handler\n");
+    return 1;
+  }
+
   // TODO: Intialize server, create worker threads
 
   // Initialize pipe
@@ -80,6 +100,11 @@ int main(int argc, char* argv[]) {
     if (initiate_session(&session, register_fifo))
       return 1;
     // TODO: Write session into producer-consumer buffer
+
+    if (sigusr1_triggered) {
+      ems_list_every(STDOUT_FILENO);
+      sigusr1_triggered = false;
+    }
   }
 
   // TODO: Destroy producer consumer buffer
