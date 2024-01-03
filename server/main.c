@@ -9,19 +9,48 @@
 #include <signal.h>
 #include <pthread.h>
 
-#include "common/constants.h"
+#include "../common/constants.h"
 #include "common/io.h"
 #include "common/op_code.h"
 #include "server/session.h"
 #include "server/parser.h"
 #include "server/operations.h"
+#include "server/queue.h"
 
 int sigusr1_triggered = false;
+session_t buffer[MAX_SESSION_COUNT];
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t full = PTHREAD_COND_INITIALIZER ,
+     not_full = PTHREAD_COND_INITIALIZER;
+int session_count = 0, host = 0, worker = 0;
 
+int buffer_init() {
+    for (size_t i = 0; i < MAX_SESSION_COUNT; i++) {
+        session_t *session = malloc(sizeof(session_t));
+        if (!session) {
+            fprintf(stderr, "[ERR]: Failed to alloc memory for sessions\n");
+            return 1;
+        }
+        buffer[i] = *session;
+    }
+    return 0;
+}
+
+void destroy_buffer(){
+    for (size_t i = 0; i < MAX_SESSION_COUNT; i++){
+        if (&(buffer[i]) != NULL)
+            free(&(buffer[i]));
+    }
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&full);
+    pthread_cond_destroy(&not_full);
+}
 static void sig_handler(int) {
   sigusr1_triggered = true;
 }
+
 void * worker_thread(void *arg) {
+  //printf("workerThread\n");
   unsigned int session_id = (unsigned int)(intptr_t)arg;
   session_t session;
   sigset_t set;
@@ -34,7 +63,18 @@ void * worker_thread(void *arg) {
 
   while (1) {
     // TODO: Read session from producer-consumer buffer
-
+    if (DEBUG_THREADS) printf("[THREAD] number %u\n",session_id);
+    pthread_mutex_lock(&mutex);
+    //printf("session_count: %d\n",session_count);
+    while (session_count == 0){
+      if (DEBUG_THREADS) printf("[THREAD] number %u is waiting...\n",session_id);
+      pthread_cond_wait(&not_full,&mutex);
+    }
+    session = buffer[worker];
+    worker++; if (worker == MAX_SESSION_COUNT) worker = 0;
+    session_count--;
+    pthread_cond_signal(&full);
+    pthread_mutex_unlock(&mutex);
     if (write_uint(session.response_pipe, session_id)) {
       fprintf(stderr, "[ERR]: Failed to send setup response: %s\n", strerror(errno));
       break;
@@ -79,7 +119,6 @@ int main(int argc, char* argv[]) {
   }
 
   // TODO: Intialize server, create worker threads
-
   // Initialize pipe
   int register_fifo;
   if (initialize_pipe(&register_fifo, argv[1])) {
@@ -87,18 +126,28 @@ int main(int argc, char* argv[]) {
   }
 
   // TODO: Initialize producer-consumer buffer
+  if (buffer_init()) return 1;
 
   pthread_t threads[MAX_SESSION_COUNT];
 
-  for (size_t i; i < MAX_SESSION_COUNT; i++) {
+  for (size_t i = 0; i < MAX_SESSION_COUNT; i++) {
     pthread_create(threads+i, NULL, worker_thread, (void *)i /* TODO: talvez tmb producer consumer buffer*/);
   }
 
+  //HOST
   session_t session;
   while (1) {
     // Read from pipe
     if (initiate_session(&session, register_fifo))
       return 1;
+    pthread_mutex_lock(&mutex);
+    while (session_count == MAX_SESSION_COUNT) pthread_cond_wait(&full,&mutex);
+    buffer[host] = session;
+    host++; if (host == MAX_SESSION_COUNT) host = 0;
+    session_count++;
+    pthread_cond_signal(&not_full);
+    pthread_mutex_unlock(&mutex);
+
     // TODO: Write session into producer-consumer buffer
 
     if (sigusr1_triggered) {

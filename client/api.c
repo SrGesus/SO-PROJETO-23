@@ -11,7 +11,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "common/constants.h"
+#include "../common/constants.h"
 #include "common/io.h"
 #include "common/op_code.h"
 
@@ -23,7 +23,6 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
   char msg[BUFFER_SIZE];
   int server_pipe;
   msg[0] = SETUP;
-
   memset(msg + 1, '\0', BUFFER_SIZE - 1);
   strcpy(msg + 1, req_pipe_path);
   strcpy(msg + 1 + MAX_PIPE_PATH_SIZE, resp_pipe_path);
@@ -48,12 +47,10 @@ int ems_setup(char const* req_pipe_path, char const* resp_pipe_path, char const*
     fprintf(stderr, "[ERR]: Failed to create resp_pipe %s: %s\n", resp_pipe_path, strerror(errno));
     return 1;
   }
-
   if (write_nbytes(server_pipe, msg, BUFFER_SIZE)) {
     fprintf(stderr, "[ERR]: Failed to write msg %s: %s\n", msg, strerror(errno));
     return 1;
   }
-
   if ((req_pipe = open(req_pipe_path, O_WRONLY)) < 0) {
     fprintf(stderr, "[ERR]: Failed to open req_pipe %s: %s\n", req_pipe_path, strerror(errno));
     return 1;

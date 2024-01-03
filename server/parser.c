@@ -47,6 +47,7 @@ int initialize_pipe(int* register_fifo, const char* register_pipe_path) {
 }
 
 int initiate_session(session_t* session, int register_fifo) {
+  //printf("hello\n");
   const size_t BUFFER_SIZE = 1 /* OP_CODE */ + 40 * 2 /* pipe_paths*/;
   char buffer[BUFFER_SIZE];
   ssize_t ret = read(register_fifo, buffer, BUFFER_SIZE);
@@ -88,7 +89,7 @@ int initiate_session(session_t* session, int register_fifo) {
     printf("[DEBUG]: Opening pipe \"%s\" (O_RDWR)\n", resp_pipe_path);
   }
 
-  int resp_pipe = open(resp_pipe_path, O_RDWR);
+  int resp_pipe = open(resp_pipe_path, O_WRONLY);
   if (resp_pipe == -1) {
     fprintf(stderr, "[ERR]: Failed to open response pipe \"%s\": %s\n", resp_pipe_path, strerror(errno));
     return 1;
