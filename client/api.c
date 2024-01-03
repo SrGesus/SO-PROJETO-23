@@ -166,8 +166,7 @@ int ems_show(int out_fd, unsigned int event_id) {
   if (result) return result;
 
   size_t num_rows, num_cols;
-  if (read_size(resp_pipe, &num_rows) ||
-      read_size(resp_pipe, &num_cols)) {
+  if (read_size(resp_pipe, &num_rows) || read_size(resp_pipe, &num_cols)) {
     fprintf(stderr, "[ERR]: Failed to read response: %s\n", strerror(errno));
     return 1;
   }

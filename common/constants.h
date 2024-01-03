@@ -2,7 +2,7 @@
 #define STATE_ACCESS_DELAY_US 500000  // 500ms
 #define MAX_JOB_FILE_NAME_SIZE 256
 #define MAX_SESSION_COUNT 6
-
+#define QUEUE_BUFFER_SIZE 10
 #define MAX_PIPE_PATH_SIZE 40
 
 #define true 1
@@ -10,7 +10,7 @@
 
 // Debug information
 #define DEBUG true
-//Show thread information
+// Show thread information
 #define DEBUG_THREADS DEBUG && true
 // Show Register Fifo messages
 #define DEBUG_REGISTER DEBUG && true

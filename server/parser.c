@@ -1,3 +1,5 @@
+#include "server/parser.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -7,7 +9,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include "server/parser.h"
 #include "common/constants.h"
 #include "common/io.h"
 #include "common/op_code.h"
@@ -47,7 +48,7 @@ int initialize_pipe(int* register_fifo, const char* register_pipe_path) {
 }
 
 int initiate_session(session_t* session, int register_fifo) {
-  //printf("hello\n");
+  // printf("hello\n");
   const size_t BUFFER_SIZE = 1 /* OP_CODE */ + 40 * 2 /* pipe_paths*/;
   char buffer[BUFFER_SIZE];
   ssize_t ret = read(register_fifo, buffer, BUFFER_SIZE);
@@ -167,7 +168,6 @@ int parse_show(session_t* session) {
 
   return ems_show(session->response_pipe, event_id);
 }
-
 
 int parse_operation(session_t* session) {
   char operation = '0';

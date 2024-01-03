@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Example commands
 command1="./client ../req_pipe1 ../res_pipe1 ../reg_pipe ../jobs/a.jobs"
 command2="./client ../req_pipe ../res_pipe ../reg_pipe ../jobs/test.jobs"

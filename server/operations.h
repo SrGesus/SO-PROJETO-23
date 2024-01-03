@@ -39,4 +39,4 @@ int ems_list_events(int out_fd);
 
 int ems_list_every(int out_fd);
 
-#endif // OPERATIONS_H
+#endif  // OPERATIONS_H

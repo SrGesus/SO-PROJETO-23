@@ -4,8 +4,8 @@
 #include <unistd.h>
 
 #include "api.h"
-#include "common/constants.h"
 #include "client/parser.h"
+#include "common/constants.h"
 
 int main(int argc, char* argv[]) {
   if (argc != 5) {

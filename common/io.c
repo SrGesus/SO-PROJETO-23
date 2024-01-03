@@ -158,8 +158,6 @@ int read_int(int fd, int *value) {
 
   memcpy(value, buffer, BUFFER_SIZE);
 
-  printf("Read: %u\n", *value);
-
   return 0;
 }
 
