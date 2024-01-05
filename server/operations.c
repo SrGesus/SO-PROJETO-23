@@ -330,8 +330,8 @@ int ems_list_every(int out_fd) {
       pthread_rwlock_unlock(&event_list->rwl);
       return 1;
     }
-    
-    struct Event * event = current->event;
+
+    struct Event* event = current->event;
 
     if (pthread_mutex_lock(&event->mutex) != 0) {
       fprintf(stderr, "Error locking mutex\n");

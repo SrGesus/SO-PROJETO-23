@@ -116,6 +116,10 @@ int main(int argc, char* argv[]) {
         close(in_fd);
         close(out_fd);
         ems_quit();
+        if (unlink(argv[1]) || unlink(argv[2])) {
+          fprintf(stderr, "Failed to unlink client pipes\n");
+          return 1;
+        }
         return 0;
     }
   }

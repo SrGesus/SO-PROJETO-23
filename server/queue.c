@@ -1,4 +1,5 @@
 #include "queue.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -23,7 +24,7 @@ void queue_destroy() {
   queue = NULL;
 }
 
-void queue_produce(session_t *session) {    
+void queue_produce(session_t *session) {
   pthread_mutex_lock(&queue->mutex);
   while (queue->session_count == QUEUE_BUFFER_SIZE) pthread_cond_wait(&queue->full, &queue->mutex);
   queue->buffer[queue->host] = *session;

@@ -176,26 +176,26 @@ int ems_show(int out_fd, unsigned int event_id) {
       char buffer[16];
       unsigned int seat;
       if (read_uint(resp_pipe, &seat)) {
-        perror("Error reading from response pipe");
+        fprintf(stderr, "[ERR]: Failed to read response: %s\n", strerror(errno));
         return 1;
       }
       sprintf(buffer, "%u", seat);
 
       if (print_str(out_fd, buffer)) {
-        perror("Error writing to file descriptor");
+        fprintf(stderr, "[ERR]: Failed to write to file descriptor: %s\n", strerror(errno));
         return 1;
       }
 
       if (j < num_cols) {
         if (print_str(out_fd, " ")) {
-          perror("Error writing to file descriptor");
+          fprintf(stderr, "[ERR]: Failed to write to file descriptor: %s\n", strerror(errno));
           return 1;
         }
       }
     }
 
     if (print_str(out_fd, "\n")) {
-      perror("Error writing to file descriptor");
+      fprintf(stderr, "[ERR]: Failed to write to file descriptor: %s\n", strerror(errno));
       return 1;
     }
   }
@@ -229,19 +229,19 @@ int ems_list_events(int out_fd) {
   for (size_t i = 0; i < num_events; i++) {
     char buff[] = "Event: ";
     if (print_str(out_fd, buff)) {
-      perror("Error writing to file descriptor");
+      fprintf(stderr, "[ERR]: Failed to write to file descriptor: %s\n", strerror(errno));
       return 1;
     }
 
     char buffer[16];
     unsigned int id;
     if (read_uint(resp_pipe, &id)) {
-      perror("Error reading from response pipe");
+      fprintf(stderr, "[ERR]: Failed to read response: %s\n", strerror(errno));
       return 1;
     }
     sprintf(buffer, "%u\n", id);
     if (print_str(out_fd, buffer)) {
-      perror("Error writing to file descriptor");
+      fprintf(stderr, "[ERR]: Failed to write to file descriptor: %s\n", strerror(errno));
       return 1;
     }
   }

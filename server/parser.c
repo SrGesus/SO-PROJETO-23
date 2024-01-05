@@ -37,7 +37,6 @@ int initialize_pipe(int* register_fifo, const char* register_pipe_path) {
     printf("[DEBUG]: Opening pipe \"%s\" (O_RDWR)\n", register_pipe_path);
   }
   // Opening with Read Write causes thread to block when nothing is sent (instead of EOF)
-  // Means server MUST be started before client
   *register_fifo = open(register_pipe_path, O_RDWR);
   if (*register_fifo < 0) {
     fprintf(stderr, "[ERR]: Failed to open register fifo \"%s\": %s\n", register_pipe_path, strerror(errno));
@@ -54,6 +53,10 @@ int initiate_session(session_t* session, int register_fifo) {
   ssize_t ret = read(register_fifo, buffer, BUFFER_SIZE);
   if (ret == -1) {
     // ret == -1 indicates error
+    if (errno == EINTR) {
+      if (DEBUG) printf("[DEBUG] EINTR activated");
+      return 1;
+    }
     fprintf(stderr, "[ERR]: Failed to read register fifo: %s\n", strerror(errno));
     return 1;
   }

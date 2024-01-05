@@ -19,7 +19,10 @@
 
 int sigusr1_triggered = false;
 
-static void sig_handler(int) { sigusr1_triggered = true; }
+static void sig_handler(int sig) {
+  sigusr1_triggered = true;
+  if (signal(sig, sig_handler) == SIG_ERR) fprintf(stderr, "[ERR]: Failed to set signal handler\n");
+}
 
 void *worker_thread(void *arg) {
   // printf("workerThread\n");
@@ -107,7 +110,6 @@ int main(int argc, char *argv[]) {
       queue_produce(&session);
     }
 
-
     if (sigusr1_triggered) {
       ems_list_every(STDOUT_FILENO);
       sigusr1_triggered = false;
@@ -119,6 +121,9 @@ int main(int argc, char *argv[]) {
 
   // Close pipe
   close(register_fifo);
-
+  if (unlink(argv[1])) {
+    fprintf(stderr, "[ERR]: Failed to unlink %s: %s\n", argv[1], strerror(errno));
+    return 1;
+  }
   ems_terminate();
 }
